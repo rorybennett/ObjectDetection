@@ -10,24 +10,28 @@ from PIL import Image
 from natsort import natsorted
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F
+
 from . import datasets_model_types
 
 
 class ProstateBladderDataset(torch.utils.data.Dataset):
-    def __init__(self, root, transforms=None, oversampling_factor=1, model_type=None, verbose=False):
+    def __init__(self, root, label_names=None, transforms=None, oversampling_factor=1, model_type=None, verbose=False):
         """
         Initialise the ProstateBladderDataset class. Set the dataset root directory, the transforms that are to be used
         when __getitem__() is called, the type of model that will be accessing this dataset class, and perform minor
         dataset validation. The model_type parameter is necessary as different models follow different conventions.
 
         :param root: Directory containing images and labels folders.
+        :param label_names: List of names for associated labels.
         :param transforms: Transformers to be used on this dataset.
         :param oversampling_factor: Increase dataset size by this amount (oversampling).
         :param model_type: String representation of the model type this dataset is used with.
         :param verbose: Print details to screen.
         """
+
         self.verbose = verbose
         self.root = root
+        self.label_names = label_names
         self.transforms = transforms
         self.oversampling_factor = oversampling_factor
         self.model_type = model_type
@@ -122,6 +126,21 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
     def __len__(self):
         # Total images = input images * oversampling factor.
         return len(self.imgs) * self.oversampling_factor
+
+    def get_label_name(self, label: int):
+        """
+        Return the label name associated with the given label. If no self.label_names==None, the int label is returned
+        as a string.
+
+        :param label: Label integer value (return by model).
+        :return: Label string name.
+        """
+        if self.label_names:
+            return self.label_names[label]
+        else:
+            if self.verbose:
+                print(f'No label_names given during initialisation.')
+            return f'{label}'
 
     def get_image_count(self):
         # Total input images, before oversampling.
