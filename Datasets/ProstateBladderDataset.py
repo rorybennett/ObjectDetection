@@ -1,5 +1,5 @@
 """
-Custom dataset class for the prostate and bladder detection. A single prostate bounding box and single bladder
+Custom dataset class for the prostate and bladder detection. A single prostate bounding box and/or a single bladder
 bounding box are present for each image. The dataset labels should be organised in the YOLO format. Images
 will be stored in the root/images directory and labels in the root/labels directory.
 """
@@ -154,9 +154,9 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
         """
         if self.verbose:
             print(f'Running dataset validation...')
-        # 1
+        # Validation 1.
         assert len(self.imgs) == len(self.labels), "Dataset input images and labels are of different length."
-        # 2
+        # Validation 2.
         for i in range(len(self.imgs)):
             if self.imgs[i].split('.')[0] != self.labels[i].split('.')[0]:
                 assert False, f"There is a mismatch between imgs and labels at {self.imgs[i]} and {self.labels[i]}."
