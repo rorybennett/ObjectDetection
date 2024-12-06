@@ -109,5 +109,10 @@ def get_arg_parser():
                         type=int,
                         default=1,
                         help='How much oversampling is desired (multiply the number of training images by this factor)')
+    parser.add_argument('-sl',
+                        '--save_latest',
+                        type=bool,
+                        default=False,
+                        help='Save the latest model as well as the best model.pth')
 
     return parser.parse_args()
