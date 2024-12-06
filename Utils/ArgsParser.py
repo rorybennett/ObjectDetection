@@ -13,16 +13,26 @@ def get_arg_parser():
     """
     # Path parameters
     parser = argparse.ArgumentParser()
-    parser.add_argument('-tp',
-                        '--train_path',
+    parser.add_argument('-tip',
+                        '--train_images_path',
                         type=str,
                         required=True,
-                        help='Path to training directory containing ./images and ./labels')
-    parser.add_argument('-vp',
-                        '--val_path',
+                        help='Path to training images directory')
+    parser.add_argument('-tlp',
+                        '--train_labels_path',
                         type=str,
                         required=True,
-                        help='Path to validation directory containing ./images and ./labels')
+                        help='Path to training labels directory')
+    parser.add_argument('-vip',
+                        '--val_images_path',
+                        type=str,
+                        required=True,
+                        help='Path to validation images directory')
+    parser.add_argument('-vlp',
+                        '--val_labels_path',
+                        type=str,
+                        required=True,
+                        help='Path to validation images directory')
     parser.add_argument('-sp',
                         '--save_path',
                         type=str,
