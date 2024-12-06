@@ -11,7 +11,6 @@ from PIL import Image
 from matplotlib import pyplot as plt, patches
 from natsort import natsorted
 from torchvision import tv_tensors
-from torchvision.transforms.v2 import functional as F
 
 from . import datasets_model_types
 
@@ -91,7 +90,7 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
         return img, target
 
     def __len__(self):
-        # Total images = input images * oversampling factor.
+        # Total images in dataset = input images * oversampling factor.
         return len(self.imgs) * self.oversampling_factor
 
     def get_targets(self, label_path, img_size, idx):
@@ -228,4 +227,3 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
                                       edgecolor=colours[index % len(colours)], facecolor='none')
             ax[1].add_patch(patch)
         plt.show()
-
