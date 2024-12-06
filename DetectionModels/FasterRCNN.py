@@ -8,7 +8,7 @@ No pretrained weights are used, and the number of classes is equal to detection 
 from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2
 
 
-class CustomFasterRCNN:
+class FasterRCNN:
     def __init__(self, num_classes):
         self.model = fasterrcnn_resnet50_fpn_v2(weights=None, num_classes=num_classes)
 
