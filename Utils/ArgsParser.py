@@ -39,11 +39,6 @@ def get_arg_parser():
                         required=True,
                         help='Path to save directory where model_best.pth and other files are stored')
     # Training parameters.
-    parser.add_argument('-mod',
-                        '--model',
-                        type=str,
-                        required=True,
-                        help='Model to be trained (RetinaNet or FasterRCNN for now)')
     parser.add_argument('-e',
                         '--epochs',
                         type=int,
