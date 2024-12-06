@@ -129,7 +129,7 @@ print('=========================================================================
 # Training and validation loop.
 ########################################################################################################################
 def main():
-    print(f'Starting training on [{device}]:')
+    print(f'Starting training:')
     early_stopping = EarlyStopping(patience=patience, delta=patience_delta)
     training_losses = []
     val_losses = []
