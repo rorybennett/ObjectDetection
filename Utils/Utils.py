@@ -42,7 +42,7 @@ def plot_losses(best_epoch, training_losses, validation_losses, training_learnin
                        'with Learning Rate')
     ax[0, 2].plot(epochs, training_combined_losses, marker='*')
     ax_lr = ax[0, 2].twinx()
-    ax_lr.plot(epochs, [i * 100 for i in training_learning_rates], color='red', label='learning rate')
+    ax_lr.plot(epochs, [i * 1000 for i in training_learning_rates], color='red', label='learning rate')
     ax[0, 2].axvline(x=best_epoch, color='green', linestyle='--')
     ax_lr.set_ylabel('Learning Rate x10$^{-2}$')
     ax_lr.legend(loc='upper right')
