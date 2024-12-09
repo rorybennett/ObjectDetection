@@ -195,9 +195,9 @@ def main():
                 epoch_val_loss[1] += cls_loss.item()
                 epoch_val_loss[2] += bbox_loss.item()
 
-                # Average epoch loss per image for all images.
-                epoch_val_loss = [loss / len(train_loader) for loss in epoch_val_loss]
-                val_losses.append(epoch_val_loss)
+            # Average epoch loss per image for all images.
+            epoch_val_loss = [loss / len(train_loader) for loss in epoch_val_loss]
+            val_losses.append(epoch_val_loss)
 
         ################################################################################################################
         # Display training and validation losses (combined loss - training is weighted, validation is not).
