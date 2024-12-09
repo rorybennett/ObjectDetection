@@ -55,9 +55,9 @@ val_labels_path=${inputs[$((5 * SGE_TASK_ID - 2))]}
 saving_path=${inputs[$((5 * SGE_TASK_ID - 1))]}
 
 python train_fasterrcnn.py \
-  --train_images_path="./Datasets/$training_images_path" \
-  --train_labels_path="./Datasets/$training_labels_path" \
-  --val_images_path="./Datasets/$val_images_path" \
-  --val_labels_path="./Datasets/$val_labels_path" \
+  --train_images_path="./ObjectDetectionDatasets/$training_images_path" \
+  --train_labels_path="./ObjectDetectionDatasets/$training_labels_path" \
+  --val_images_path="./ObjectDetectionDatasets/$val_images_path" \
+  --val_labels_path="./ObjectDetectionDatasets/$val_labels_path" \
   --save_path="/data/scratch/exx851/RetinaNetResults/$saving_path" \
   --oversampling_factor=4
