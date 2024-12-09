@@ -74,7 +74,7 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shu
                                          collate_fn=lambda x: tuple(zip(*x)))
 
 ########################################################################################################################
-# Set up model, optimiser, and learning rate scheduler (FasterRCNN/RetinaNet).
+# Set up model, optimiser, and learning rate scheduler (FasterRCNN).
 ########################################################################################################################
 print(f'Loading FasterRCNN model...', end=' ')
 custom_model = FasterRCNN(num_classes=3)
@@ -239,7 +239,7 @@ def main():
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
             _, detections = custom_model.forward(images, targets)
 
-            Utils.plot_validation_results(detections, images, counter, save_path)
+            Utils.plot_validation_results(detections, images, 1, counter, save_path)
 
             counter += batch_size
 
