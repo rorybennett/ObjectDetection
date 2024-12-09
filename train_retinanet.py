@@ -255,3 +255,7 @@ def main():
           f"End time: {script_end.strftime('%Y-%m-%d  %H:%M:%S')}.\n"
           f'Total run time: {run_time}.')
     print('=====================================================================================================')
+
+
+if __name__ == '__main__':
+    main()
