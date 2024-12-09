@@ -68,7 +68,8 @@ def plot_losses(best_epoch, training_losses, validation_losses, training_learnin
     plt.close()
 
 
-def plot_validation_results(validation_detections, validation_images, starting_label, counter, save_path):
+def plot_validation_results(validation_detections, validation_images, starting_label, detection_count, counter,
+                            save_path):
     """
     Draw input images with detected bounding boxes on them. Only the top scoring box of each label/class
     is displayed. Since FasterRCNN using label 0 for background and RetinaNet using label 0 for the first
@@ -76,6 +77,7 @@ def plot_validation_results(validation_detections, validation_images, starting_l
     
     :param validation_detections: Detection returned by the model in eval() mode.
     :param validation_images: Images that were given to the model for detection.
+    :param detection_count: Total number of detections (boxes) per class to be displayed.
     :param starting_label: Lowest label value (RetinaNet = 0, FasterRCNN = 1 since 0 is background).
     :param counter: Image counter, based on batch_size, for saving images with unique names while maintaining
                     validation dataset size.
