@@ -200,7 +200,7 @@ def main():
                 epoch_val_loss[2] += bbox_loss.item()
 
             # Average epoch loss per image for all images.
-            epoch_val_loss = [loss / len(train_loader) for loss in epoch_val_loss]
+            epoch_val_loss = [loss / len(val_loader) for loss in epoch_val_loss]
             val_losses.append(epoch_val_loss)
 
         ################################################################################################################
