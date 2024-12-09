@@ -213,9 +213,9 @@ def main():
         ################################################################################################################
         final_epoch_reached = epoch
         if final_epoch_reached + 1 > warmup_epochs:
-            early_stopping(epoch_val_loss, custom_model.model, epoch, optimiser, save_path)
+            early_stopping(epoch_val_loss[0], custom_model.model, epoch, optimiser, save_path)
 
-        Utils.plot_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
+        Utils.plot_losses(early_stopping.best_epoch + 1, training_losses, val_losses[-1][0], training_learning_rates,
                           save_path)
         if early_stopping.early_stop:
             print('Patience reached, stopping early.')
