@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt, patches
 from natsort import natsorted
 from torchvision import tv_tensors
 
-from . import model_fasterrcnn
+from . import model_fasterrcnn, model_retinanet
 
 
 class ProstateBladderDataset(torch.utils.data.Dataset):
@@ -124,7 +124,7 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
                 if self.model_type == model_fasterrcnn:
                     # Add 1 since 0 is always background for fasterrcnn.
                     labels.append(class_id + 1)
-                else:
+                elif self.model_type == model_retinanet:
                     labels.append(class_id)
 
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
@@ -142,11 +142,13 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
                 "area": area,
                 "iscrowd": iscrowd
             }
-        else:
+        elif self.model_type == model_retinanet:
             target = {
                 "boxes": tv_tensors.BoundingBoxes(boxes, format="XYXY", canvas_size=(img_height, img_width)),
                 "labels": labels
             }
+        else:
+            assert False, 'No model type selected, ensure model type matches one of the given types.'
 
         return target
 
