@@ -77,7 +77,7 @@ def get_arg_parser():
     parser.add_argument('-lres',
                         '--learning_restart',
                         type=int,
-                        default=150,
+                        default=100,
                         help='Learning rate schedular restart frequency')
     parser.add_argument('-m',
                         '--momentum',

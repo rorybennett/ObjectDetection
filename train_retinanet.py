@@ -131,7 +131,7 @@ print('=========================================================================
 ########################################################################################################################
 def main():
     print(f'Starting training:')
-    early_stopping = EarlyStopping(patience=patience, delta=patience_delta)
+    early_stopping = EarlyStopping(patience=patience, delta=patience_delta, save_latest=save_latest)
     training_losses = []
     val_losses = []
     training_learning_rates = []
@@ -236,7 +236,7 @@ def main():
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
             _, detections = custom_model.forward(images, targets)
 
-            Utils.plot_validation_results(detections, images, 0, counter, save_path)
+            Utils.plot_validation_results(detections, images, 0, 0, counter, save_path)
 
             counter += batch_size
 

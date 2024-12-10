@@ -77,7 +77,7 @@ def plot_validation_results(validation_detections, validation_images, starting_l
     
     :param validation_detections: Detection returned by the model in eval() mode.
     :param validation_images: Images that were given to the model for detection.
-    :param detection_count: Total number of detections (boxes) per class to be displayed.
+    :param detection_count: Maximum number of detections (boxes) per class to be displayed.
     :param starting_label: Lowest label value (RetinaNet = 0, FasterRCNN = 1 since 0 is background).
     :param counter: Image counter, based on batch_size, for saving images with unique names while maintaining
                     validation dataset size.
