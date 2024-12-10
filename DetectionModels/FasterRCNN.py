@@ -26,13 +26,6 @@ class FasterRCNN:
         if self.model.training:
             return self.model(images, targets)
         else:
-            # with torch.no_grad():
-            #     self.model.train()
-            #     losses = self.model.forward(images, targets)
-            #     # Set the model back to evaluation mode
-            #     self.model.eval()
-            #     detections = self.model.forward(images)
-            # return losses, detections
             if targets is not None:
                 # Set the model to training mode temporarily to get losses (with torch.no_grad(), should already be set
                 # in the calling script).
