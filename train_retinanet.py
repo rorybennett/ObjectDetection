@@ -6,6 +6,7 @@ import torch
 from torch import optim
 from torch.nn.utils import clip_grad_norm_
 
+import Datasets
 from Datasets.ProstateBladderDataset import ProstateBladderDataset
 from DetectionModels.RetinaNet import RetinaNet
 from EarlyStopping.EarlyStopping import EarlyStopping
@@ -50,7 +51,7 @@ learning_restart = args.learning_restart  # Learning rate schedular restart freq
 momentum = args.momentum  # Optimiser momentum.
 weight_decay = args.weight_decay  # Optimiser weight decay.
 box_weight = args.box_weight  # Weight applied to box loss.
-cls_weight = args.box_weight  # Weight applied to classification loss.
+cls_weight = args.cls_weight  # Weight applied to classification loss.
 oversampling_factor = args.oversampling_factor  # Oversampling factor.
 save_latest = args.save_latest  # Save latest model as well as the best model.pth.
 
@@ -60,9 +61,10 @@ save_latest = args.save_latest  # Save latest model as well as the best model.pt
 train_transforms = Transformers.get_training_transforms(image_size=image_size)
 val_transforms = Transformers.get_validation_transforms(image_size=image_size)
 train_dataset = ProstateBladderDataset(images_root=train_images_path, labels_root=train_labels_path,
-                                       transforms=train_transforms, oversampling_factor=oversampling_factor)
+                                       model_type=Datasets.model_retinanet, transforms=train_transforms,
+                                       oversampling_factor=oversampling_factor)
 val_dataset = ProstateBladderDataset(images_root=val_images_path, labels_root=val_labels_path,
-                                     transforms=val_transforms)
+                                     model_type=Datasets.model_retinanet, transforms=val_transforms)
 # If you want to validate the dataset transforms visually, you can do it here.
 
 ########################################################################################################################
@@ -106,6 +108,8 @@ with open(join(save_path, 'training_parameters.txt'), 'w') as save_file:
                     f'Optimiser momentum: {momentum}\n'
                     f'Optimiser weight decay: {weight_decay}\n'
                     f'Oversampling factor: {oversampling_factor}\n'
+                    f'Box weight: {box_weight}\n'
+                    f'Classification weight: {cls_weight}\n'
                     f'Total training images in dataset (excluding dataset oversampling): {train_dataset.get_image_count()}\n'
                     f'Total training images in dataset (including dataset oversampling): {train_dataset.__len__()}\n'
                     f'Total validation images in dataset: {val_dataset.__len__()}\n'

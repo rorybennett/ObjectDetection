@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt, patches
 from natsort import natsorted
 from torchvision import tv_tensors
 
-from . import datasets_model_types
+from . import model_fasterrcnn
 
 
 class ProstateBladderDataset(torch.utils.data.Dataset):
@@ -121,7 +121,7 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
 
                 boxes.append([x_min, y_min, x_max, y_max])
 
-                if self.model_type == datasets_model_types['fasterrcnn_resnet50_fpn_v2']:
+                if self.model_type == model_fasterrcnn:
                     # Add 1 since 0 is always background for fasterrcnn.
                     labels.append(class_id + 1)
                 else:
@@ -131,7 +131,7 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
         labels = torch.as_tensor(labels, dtype=torch.int64)
 
         # Create targets dict, depends on model type.
-        if self.model_type == datasets_model_types['fasterrcnn_resnet50_fpn_v2']:
+        if self.model_type == model_fasterrcnn:
             image_id = torch.tensor([idx])
             area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
             iscrowd = torch.zeros((len(boxes),), dtype=torch.int64)
