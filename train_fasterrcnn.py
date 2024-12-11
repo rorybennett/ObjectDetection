@@ -140,97 +140,97 @@ def main():
     val_losses = []
     training_learning_rates = []
     final_epoch_reached = 0
-    # for epoch in range(total_epochs):
-    #     ################################################################################################################
-    #     # Training step within epoch.
-    #     ################################################################################################################
-    #     custom_model.model.train()
-    #     epoch_train_loss = [0, 0, 0]
-    #     for images, targets in train_loader:
-    #         images = list(image.to(device) for image in images)
-    #         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-    #         # Zero the gradients.
-    #         optimiser.zero_grad()
-    #         # Forward pass.
-    #         loss_dict = custom_model.forward(images, targets)
-    #         # Extract each loss.
-    #         cls_loss = loss_dict['loss_classifier']
-    #         bbox_loss = loss_dict['loss_box_reg']
-    #         objectness_loss = loss_dict['loss_objectness']
-    #         rpn_box_loss = loss_dict['loss_rpn_box_reg']
-    #         # Calculate total loss, can apply weights here.
-    #         losses = cls_loss * cls_weight + bbox_loss * box_weight + objectness_loss + rpn_box_loss
-    #         # Check for NaNs or Infs.
-    #         if torch.isnan(losses).any() or torch.isinf(losses).any():
-    #             print("Loss has NaNs or Infs, skipping this batch")
-    #             continue
-    #         # Calculate gradients.
-    #         losses.backward()
-    #         # Apply gradient clipping.
-    #         clip_grad_norm_(custom_model.model.parameters(), 2)
-    #         optimiser.step()
-    #         # Epoch loss per batch.
-    #         epoch_train_loss[0] += losses.item()
-    #         epoch_train_loss[1] += cls_loss.item()
-    #         epoch_train_loss[2] += bbox_loss.item()
-    #     # Step schedular once per epoch.
-    #     lr_schedular.step()
-    #     # Average epoch loss per image for all images.
-    #     epoch_train_loss = [loss / len(train_loader) for loss in epoch_train_loss]
-    #     training_losses.append(epoch_train_loss)
-    #     training_learning_rates.append(lr_schedular.get_last_lr()[0])
-    #
-    #     ################################################################################################################
-    #     # Validation step within epoch.
-    #     ################################################################################################################
-    #     custom_model.model.eval()
-    #     epoch_val_loss = [0, 0, 0]
-    #     # No gradient calculations.
-    #     with torch.no_grad():
-    #         for images, targets in val_loader:
-    #             images = list(image.to(device) for image in images)
-    #             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-    #             # Forward pass.
-    #             loss_dict, _ = custom_model.forward(images, targets)
-    #             # Extract each loss.
-    #             cls_loss = loss_dict['loss_classifier']
-    #             bbox_loss = loss_dict['loss_box_reg']
-    #             objectness_loss = loss_dict['loss_objectness']
-    #             rpn_box_loss = loss_dict['loss_rpn_box_reg']
-    #             # Calculate total loss.
-    #             losses = cls_loss * cls_weight + bbox_loss * box_weight + objectness_loss + rpn_box_loss
-    #             # Epoch loss per batch.
-    #             epoch_val_loss[0] += losses.item()
-    #             epoch_val_loss[1] += cls_loss.item()
-    #             epoch_val_loss[2] += bbox_loss.item()
-    #
-    #         # Average epoch loss per image for all images.
-    #         epoch_val_loss = [loss / len(val_loader) for loss in epoch_val_loss]
-    #         val_losses.append(epoch_val_loss)
-    #
-    #     ################################################################################################################
-    #     # Display training and validation losses (combined loss - training is weighted, validation is not).
-    #     ################################################################################################################
-    #     time_now = datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
-    #     print(f"\t{time_now}  -  Epoch {epoch + 1}/{total_epochs}, "
-    #           f"Train Loss: {training_losses[-1][0]:0.3f}, "
-    #           f"Val Loss: {val_losses[-1][0]:0.3f}, "
-    #           f"Learning Rate: {lr_schedular.get_last_lr()[0]:0.6f},", end=' ', flush=True)
-    #
-    #     ################################################################################################################
-    #     # Check for early stopping. If patience reached, model is saved and final plots are made.
-    #     ################################################################################################################
-    #     final_epoch_reached = epoch
-    #     if final_epoch_reached + 1 > warmup_epochs:
-    #         early_stopping(epoch_val_loss[0], custom_model.model, epoch, optimiser, save_path)
-    #
-    #     Utils.plot_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
-    #                       save_path)
-    #     if early_stopping.early_stop:
-    #         print('Patience reached, stopping early.')
-    #         break
-    #     else:
-    #         print()
+    for epoch in range(total_epochs):
+        ################################################################################################################
+        # Training step within epoch.
+        ################################################################################################################
+        custom_model.model.train()
+        epoch_train_loss = [0, 0, 0]
+        for images, targets in train_loader:
+            images = list(image.to(device) for image in images)
+            targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+            # Zero the gradients.
+            optimiser.zero_grad()
+            # Forward pass.
+            loss_dict = custom_model.forward(images, targets)
+            # Extract each loss.
+            cls_loss = loss_dict['loss_classifier']
+            bbox_loss = loss_dict['loss_box_reg']
+            objectness_loss = loss_dict['loss_objectness']
+            rpn_box_loss = loss_dict['loss_rpn_box_reg']
+            # Calculate total loss, can apply weights here.
+            losses = cls_loss * cls_weight + bbox_loss * box_weight + objectness_loss + rpn_box_loss
+            # Check for NaNs or Infs.
+            if torch.isnan(losses).any() or torch.isinf(losses).any():
+                print("Loss has NaNs or Infs, skipping this batch")
+                continue
+            # Calculate gradients.
+            losses.backward()
+            # Apply gradient clipping.
+            clip_grad_norm_(custom_model.model.parameters(), 2)
+            optimiser.step()
+            # Epoch loss per batch.
+            epoch_train_loss[0] += losses.item()
+            epoch_train_loss[1] += cls_loss.item()
+            epoch_train_loss[2] += bbox_loss.item()
+        # Step schedular once per epoch.
+        lr_schedular.step()
+        # Average epoch loss per image for all images.
+        epoch_train_loss = [loss / len(train_loader) for loss in epoch_train_loss]
+        training_losses.append(epoch_train_loss)
+        training_learning_rates.append(lr_schedular.get_last_lr()[0])
+
+        ################################################################################################################
+        # Validation step within epoch.
+        ################################################################################################################
+        custom_model.model.eval()
+        epoch_val_loss = [0, 0, 0]
+        # No gradient calculations.
+        with torch.no_grad():
+            for images, targets in val_loader:
+                images = list(image.to(device) for image in images)
+                targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+                # Forward pass.
+                loss_dict, _ = custom_model.forward(images, targets)
+                # Extract each loss.
+                cls_loss = loss_dict['loss_classifier']
+                bbox_loss = loss_dict['loss_box_reg']
+                objectness_loss = loss_dict['loss_objectness']
+                rpn_box_loss = loss_dict['loss_rpn_box_reg']
+                # Calculate total loss.
+                losses = cls_loss * cls_weight + bbox_loss * box_weight + objectness_loss + rpn_box_loss
+                # Epoch loss per batch.
+                epoch_val_loss[0] += losses.item()
+                epoch_val_loss[1] += cls_loss.item()
+                epoch_val_loss[2] += bbox_loss.item()
+
+            # Average epoch loss per image for all images.
+            epoch_val_loss = [loss / len(val_loader) for loss in epoch_val_loss]
+            val_losses.append(epoch_val_loss)
+
+        ################################################################################################################
+        # Display training and validation losses (combined loss - training is weighted, validation is not).
+        ################################################################################################################
+        time_now = datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
+        print(f"\t{time_now}  -  Epoch {epoch + 1}/{total_epochs}, "
+              f"Train Loss: {training_losses[-1][0]:0.3f}, "
+              f"Val Loss: {val_losses[-1][0]:0.3f}, "
+              f"Learning Rate: {lr_schedular.get_last_lr()[0]:0.6f},", end=' ', flush=True)
+
+        ################################################################################################################
+        # Check for early stopping. If patience reached, model is saved and final plots are made.
+        ################################################################################################################
+        final_epoch_reached = epoch
+        if final_epoch_reached + 1 > warmup_epochs:
+            early_stopping(epoch_val_loss[0], custom_model.model, epoch, optimiser, save_path)
+
+        Utils.plot_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
+                          save_path)
+        if early_stopping.early_stop:
+            print('Patience reached, stopping early.')
+            break
+        else:
+            print()
 
     ####################################################################################################################
     # On training complete, pass through validation images and plot them using best model (must be reloaded).
