@@ -1,3 +1,4 @@
+from collections import defaultdict
 from os.path import join
 
 import numpy as np
@@ -87,18 +88,23 @@ def plot_validation_results(validation_detections, validation_images, starting_l
     # Since batches are used, detections per image are delt with incrementally.
     for index, output in enumerate(validation_detections):
         # Highest scoring box per label.
-        highest_scoring_boxes = {}
+        highest_scoring_boxes = defaultdict(lambda: {'scores': [], 'boxes': []})
 
-        for i in range(len(output['scores'])):
-            label = output['labels'][i].item()
-            score = output['scores'][i].item()
-            box = output['boxes'][i].tolist()
+        # Group detections by class
+        class_detections = defaultdict(list)
+        for label, score, box in zip(validation_detections['labels'], validation_detections['scores'],
+                                     validation_detections['boxes']):
+            class_detections[label].append((score, box))
 
-            if label not in highest_scoring_boxes:
-                highest_scoring_boxes[label] = {'score': score, 'box': box}
-            else:
-                if score > highest_scoring_boxes[label]['score']:
-                    highest_scoring_boxes[label] = {'score': score, 'box': box}
+        # Sort and select top x boxes for each class
+        for label, items in class_detections.items():
+            # Sort items by score in descending order
+            sorted_items = sorted(items, key=lambda item: item[0], reverse=True)
+            # Select the top scoring items.
+            top_items = sorted_items[:detection_count]
+            # Store the scores and boxes in the dictionary.
+            highest_scoring_boxes[label]['scores'] = [item[0] for item in top_items]
+            highest_scoring_boxes[label]['boxes'] = [item[1] for item in top_items]
 
         # Sort by label.
         sorted_highest_scoring_boxes = dict(sorted(highest_scoring_boxes.items()))
@@ -109,11 +115,12 @@ def plot_validation_results(validation_detections, validation_images, starting_l
 
         for label, result in sorted_highest_scoring_boxes.items():
             box = result['box']
+            score = result['score']
             patch = patches.Rectangle((box[0], box[1]), box[2] - box[0], box[3] - box[1], linewidth=1,
                                       edgecolor=box_colours[label - starting_label], facecolor='none')
             ax.add_patch(patch)
-            ax.text(box[0], box[1], f'{label}', ha='left', color=box_colours[label - starting_label], weight='bold',
-                    va='bottom')
+            ax.text(box[0], box[1], f'{label}: {score:0.1f}', ha='left', color=box_colours[label - starting_label],
+                    weight='bold', va='bottom')
 
         plt.savefig(join(save_path, f'val_result_{batch_number}.png'))
         plt.close()
