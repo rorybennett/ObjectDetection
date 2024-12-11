@@ -10,8 +10,8 @@ from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2
 
 
 class FasterRCNN:
-    def __init__(self, num_classes):
-        self.model = fasterrcnn_resnet50_fpn_v2(weights=None, num_classes=num_classes)
+    def __init__(self, weights=None, num_classes=None):
+        self.model = fasterrcnn_resnet50_fpn_v2(weights=weights, num_classes=num_classes)
 
     def forward(self, images, targets=None):
         """
