@@ -14,7 +14,7 @@ the object detection models. The segmentation setup can be found [here].
 ## Object Detection Models
 Three object detection models were trained, tested, validated, and compared:
 
-1. YOLO (not included yet):
+1. YOLO (not included yet): Not sure if I will include this as it has its own pipeline.
 2. FasterRCNN: Use `train_fasterrcnn.py` to train and validate a faster rcnn model using a
 Resnet50 FPN backbone (version 2).
 3. RetinaNet: Use `train_retinanet.py` to train and validate a retinanet model using a
