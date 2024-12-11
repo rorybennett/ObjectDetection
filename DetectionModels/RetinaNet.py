@@ -9,8 +9,8 @@ from torchvision.models.detection import retinanet_resnet50_fpn_v2
 
 
 class RetinaNet:
-    def __init__(self, weights=None):
-        self.model = retinanet_resnet50_fpn_v2(weights=weights)
+    def __init__(self, weights=None, num_classes=None):
+        self.model = retinanet_resnet50_fpn_v2(weights=weights, num_classes=num_classes)
 
     def forward(self, images, targets=None):
         """
