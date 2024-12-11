@@ -42,6 +42,7 @@ if not os.path.isdir(save_path):
     os.makedirs(save_path)  # Make save_path into dir.
 image_size = args.image_size  # Image size for resizing, used in training and validation.
 batch_size = args.batch_size  # Batch size for loader.
+num_classes = args.number_of_classes  # Number of classes present in training dataset.
 total_epochs = args.epochs  # Training epochs.
 warmup_epochs = args.warmup_epochs  # Epochs before early stop checks are done.
 patience = args.patience  # Early stopping patience.
@@ -79,7 +80,7 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shu
 # Set up model, optimiser, and learning rate scheduler (RetinaNet).
 ########################################################################################################################
 print(f'Loading RetinaNet model...', end=' ')
-custom_model = RetinaNet()
+custom_model = RetinaNet(num_classes=num_classes)
 custom_model.model.to(device)
 params = [p for p in custom_model.model.parameters() if p.requires_grad]
 optimiser = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
@@ -95,6 +96,7 @@ with open(join(save_path, 'training_parameters.txt'), 'w') as save_file:
                     f'Training labels path: {train_labels_path}\n'
                     f'Validation images path: {val_images_path}\n'
                     f'Validation labels path: {val_labels_path}\n'
+                    f'Number of training classes: {num_classes}\n'
                     f'Save path: {save_path}\n'
                     f'Batch size: {batch_size}\n'
                     f'Epochs: {total_epochs}\n'
@@ -240,7 +242,7 @@ def main():
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
             _, detections = custom_model.forward(images, targets)
 
-            Utils.plot_validation_results(detections, images, 0, 0, counter, save_path)
+            Utils.plot_validation_results(detections, images, 0, 1, counter, save_path)
 
             counter += batch_size
 

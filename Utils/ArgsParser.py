@@ -39,6 +39,11 @@ def get_arg_parser():
                         required=True,
                         help='Path to save directory where model_best.pth and other files are stored')
     # Training parameters.
+    parser.add_argument('-nc',
+                        '--number_of_classes',
+                        type=int,
+                        required=True,
+                        help='Number of classes being considered')
     parser.add_argument('-e',
                         '--epochs',
                         type=int,

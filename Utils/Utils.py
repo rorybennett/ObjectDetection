@@ -90,10 +90,13 @@ def plot_validation_results(validation_detections, validation_images, starting_l
         # Highest scoring box per label.
         highest_scoring_boxes = defaultdict(lambda: {'scores': [], 'boxes': []})
 
+        labels = output['labels'].cpu().tolist()
+        scores = output['scores'].cpu().tolist()
+        boxes = output['boxes'].cpu().tolist()
+
         # Group detections by class
         class_detections = defaultdict(list)
-        for label, score, box in zip(validation_detections['labels'], validation_detections['scores'],
-                                     validation_detections['boxes']):
+        for label, score, box in zip(labels, scores, boxes):
             class_detections[label].append((score, box))
 
         # Sort and select top x boxes for each class
@@ -106,21 +109,20 @@ def plot_validation_results(validation_detections, validation_images, starting_l
             highest_scoring_boxes[label]['scores'] = [item[0] for item in top_items]
             highest_scoring_boxes[label]['boxes'] = [item[1] for item in top_items]
 
-        # Sort by label.
-        sorted_highest_scoring_boxes = dict(sorted(highest_scoring_boxes.items()))
-
         _, ax = plt.subplots()
         ax.axis('off')
         ax.imshow(np.transpose(validation_images[index].to('cpu'), (1, 2, 0)))
 
-        for label, result in sorted_highest_scoring_boxes.items():
-            box = result['box']
-            score = result['score']
-            patch = patches.Rectangle((box[0], box[1]), box[2] - box[0], box[3] - box[1], linewidth=1,
-                                      edgecolor=box_colours[label - starting_label], facecolor='none')
-            ax.add_patch(patch)
-            ax.text(box[0], box[1], f'{label}: {score:0.1f}', ha='left', color=box_colours[label - starting_label],
-                    weight='bold', va='bottom')
+        for label, label_results in highest_scoring_boxes.items():
+            scores = label_results['scores']
+            boxes = label_results['boxes']
+            for j, s in enumerate(scores):
+                box = boxes[j]
+                patch = patches.Rectangle((box[0], box[1]), box[2] - box[0], box[3] - box[1], linewidth=1,
+                                          edgecolor=box_colours[label - starting_label], facecolor='none')
+                ax.add_patch(patch)
+                ax.text(box[0], box[1], f'{label}: {s:0.1f}', ha='left', color=box_colours[label - starting_label],
+                        weight='bold', va='bottom')
 
         plt.savefig(join(save_path, f'val_result_{batch_number}.png'))
         plt.close()
