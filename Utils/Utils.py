@@ -8,13 +8,13 @@ from . import box_colours
 
 def plot_losses(best_epoch, training_losses, validation_losses, training_learning_rates, save_path):
     """
-    Plot the training losses (combined weighted, cls, and bbox) and validation losses (combined, cls, and bbox)
+    Plot the training losses (combined weighted, cls, and bbox) and validation losses (combined weights, cls, and bbox)
     along with the learning rates. The figure will be saved at save_path/losses.png. The losses and rates should
     be in a list that grows as the epochs increase.
 
     :param best_epoch: Best epoch for special marker.
     :param training_losses: List of training losses (weighted), [combined, classification, regression].
-    :param validation_losses: List of validation losses, [combined, classification, regression].
+    :param validation_losses: List of validation losses (weighted), [combined, classification, regression].
     :param training_learning_rates: List of optimiser learning rates.
     :param save_path: Save directory.
     """
@@ -58,7 +58,7 @@ def plot_losses(best_epoch, training_losses, validation_losses, training_learnin
     ax[1, 1].axvline(x=best_epoch, color='green', linestyle='--')
     ax[1, 1].set_xlabel('Epoch')
     # Plot unweighted validation losses.
-    ax[1, 2].set_title('Validation Losses (unweighted)')
+    ax[1, 2].set_title('Validation Losses (weighted)')
     ax[1, 2].plot(epochs, val_combined_losses, marker='*')
     ax[1, 2].axvline(x=best_epoch, color='green', linestyle='--', label='Best Validation Epoch')
     ax[1, 2].set_xlabel('Epoch')
