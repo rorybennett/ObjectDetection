@@ -194,7 +194,7 @@ def main():
                 cls_loss = loss_dict['classification']
                 bbox_loss = loss_dict['bbox_regression']
                 # Calculate total loss.
-                losses = cls_loss + bbox_loss
+                losses = cls_loss * cls_weight + bbox_loss * box_weight
                 # Epoch loss per batch.
                 epoch_val_loss[0] += losses.item()
                 epoch_val_loss[1] += cls_loss.item()
