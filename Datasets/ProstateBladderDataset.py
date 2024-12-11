@@ -148,7 +148,7 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
                 "labels": labels
             }
         else:
-            assert False, 'No model type selected, ensure model type matches one of the given types.'
+            assert False, 'Unmatched model type, ensure model type matches one of the given types.'
 
         return target
 
