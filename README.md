@@ -9,7 +9,7 @@ A two-step approach was followed:
 
 The results of the detection step were fed into the segmentation step to substantially 
 improve the segmentation results. This repo contains the setup for training and testing/validating 
-the object detection models. The segmentation setup can be found [here].
+the object detection models. The segmentation setup can be found [here (not yet though)].
 
 ## Object Detection Models
 Three object detection models were trained, tested, validated, and compared:
@@ -39,7 +39,7 @@ however, minor modifications should allow for other types of object detection.
    - `FasterRCNN.py`: Makes use of the `fasterrcnn_resnet50_fpn_v2` model with no pretrained 
    weights and a slightly altered forward pass. If the model is in evaluation mode and 
    targets are given then both the losses and the detections are returned (this is to enable 
-   validation during training to prevent possible overfitting).
+   validation during training to prevent possible overfitting). 
    - `RetinaNet.py`: Makes use of the `retinanet_resnet50_fpn_v2` model with no pretrained 
    weights and a slightly altered forward pass. If the model is in evaluation mode and 
    targets are given then both the losses and the detections are returned (this is to enable 
@@ -52,17 +52,21 @@ however, minor modifications should allow for other types of object detection.
    minimum improvement necessary for continued training is defined by a delta value and the
    total number of training epochs without improvement before training is stopped is set by
    the patience value. The latest model as well as the best model are both saved, with the
-   option of disabling saving of the latest model. Model saving also occurs in this class.
+   option of disabling saving of the latest model. Model saving also occurs in this class. This 
+   class helps prevent overfitting using the validation set, without using the validation
+   set for parameter training.
 
 4. Transforms:
    - `Transformers.py`: Contains the training transforms and the validation transforms. Can
-   be altered as desired.
+   be altered as desired. Since the original dataset was composed of ultrasound images,
+   there are no colour transforms applied.
 
 5. Utils:
-   - `ArgsParser.py`: Argument parser using by the training scripts. The default values have
-   been set with my initial dataset in mind, so they may need to be changed when calling the 
+   - `ArgsParser.py`: Argument parser used by the training scripts. The default values have
+   been set with the initial dataset in mind, so they may need to be changed when calling the 
    respective training script. Paths to training images, training labels, validation images, 
-   and validation labels are necessary inputs. The rest have default options.
+   and validation labels, as well as the number of object classes, are necessary inputs. 
+   The rest have default options.
    - `Utils.py`: Extra functions used by training scripts. Loss plotting and final validation
    results plotting are available.
 
@@ -81,3 +85,19 @@ to the model at this point, while the model saved under "latest" will correspond
 from the last epoch run before early stopping kicked in.
 
 ![Sample Losses](res/losses_sample.png)
+
+## Example Terminal Call
+
+The snippet below shows an example of how to call the `train_fasterrcnn.py` script from the
+terminal. All paths are required, as is the number of classes. NB: FasterRCNN will have
+`number_of_classes = number of objects + 1` as it includes the background as class 0. 
+
+```bash
+python .\train_fasterrcnn.py 
+--train_images_path="ObjectDetectionDatasets/ProspectiveData/prostateBladder_Combined/train_0/images" 
+--train_labels_path="ObjectDetectionDatasets/ProspectiveData/prostateBladder_Combined/train_0/labels" 
+--val_images_path="ObjectDetectionDatasets/ProspectiveData/prostateBladder_Combined/val_0/images" 
+--val_labels_path="ObjectDetectionDatasets/ProspectiveData/prostateBladder_Combined/val_0/labels" 
+--save_path="FasterRCNN Model Results/prostateBladder_Combined/fold_0"
+--number_of_classes=3
+```

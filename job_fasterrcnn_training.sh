@@ -60,4 +60,5 @@ python train_fasterrcnn.py \
   --val_images_path="./ObjectDetectionDatasets/$val_images_path" \
   --val_labels_path="./ObjectDetectionDatasets/$val_labels_path" \
   --save_path="/data/scratch/exx851/RetinaNetResults/$saving_path" \
+  --number_of_classes=2 \
   --oversampling_factor=4
