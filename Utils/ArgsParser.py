@@ -52,7 +52,7 @@ def get_arg_parser():
     parser.add_argument('-we',
                         '--warmup_epochs',
                         type=int,
-                        default=5,
+                        default=15,
                         help='Number of epochs to train before early stopping checks are run')
     parser.add_argument('-is',
                         '--image_size',
@@ -112,7 +112,7 @@ def get_arg_parser():
     parser.add_argument('-sl',
                         '--save_latest',
                         type=bool,
-                        default=False,
+                        default=True,
                         help='Save the latest model as well as the best model.pth')
 
     return parser.parse_args()
