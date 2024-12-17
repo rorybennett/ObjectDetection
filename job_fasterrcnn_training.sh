@@ -61,4 +61,5 @@ python train_fasterrcnn.py \
   -vlp="./ObjectDetectionDatasets/$val_labels_path" \
   -sp="/data/scratch/exx851/FasterRCNN/$saving_path" \
   -nc=2 \
-  -of=4
+  -of=8 \
+  -we=100

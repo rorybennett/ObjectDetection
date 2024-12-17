@@ -20,7 +20,7 @@ def get_training_transforms(image_size=(600, 600)):
         v2.GaussianNoise(mean=0, sigma=0.2),
         v2.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2)),
         v2.Grayscale(num_output_channels=3),
-        v2.ToImage()
+        v2.ToDtype(torch.float32, scale=True),
     ])
 
 
@@ -28,6 +28,5 @@ def get_validation_transforms(image_size=(600, 600)):
     return v2.Compose([
         v2.Resize(image_size),
         v2.ToDtype(torch.float32, scale=True),
-        v2.Grayscale(num_output_channels=3),
-        v2.ToImage()
+        v2.Grayscale(num_output_channels=3)
     ])
