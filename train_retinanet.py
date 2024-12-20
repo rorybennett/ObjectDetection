@@ -7,7 +7,7 @@ from torch import optim
 from torch.nn.utils import clip_grad_norm_
 
 import Datasets
-from Datasets.ProstateBladderDataset import ProstateBladderDataset
+from Datasets.ProstateBladderDataset import ProstateBladderDataset as PBD
 from DetectionModels.RetinaNet import RetinaNet
 from EarlyStopping.EarlyStopping import EarlyStopping
 from Transformers import Transformers
@@ -59,13 +59,15 @@ save_latest = args.save_latest  # Save latest model as well as the best model.pt
 ########################################################################################################################
 # Transformers and datasets used by models.
 ########################################################################################################################
-train_transforms = Transformers.get_training_transforms(image_size=image_size)
-val_transforms = Transformers.get_validation_transforms(image_size=image_size)
-train_dataset = ProstateBladderDataset(images_root=train_images_path, labels_root=train_labels_path,
-                                       model_type=Datasets.model_retinanet, transforms=train_transforms,
-                                       oversampling_factor=oversampling_factor)
-val_dataset = ProstateBladderDataset(images_root=val_images_path, labels_root=val_labels_path,
-                                     model_type=Datasets.model_retinanet, transforms=val_transforms)
+train_transforms = Transformers.get_training_transforms()
+
+mean, std = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_retinanet,
+                train_mean=0, train_std=0, image_size=(0, 0)).get_mean_and_std()
+train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_retinanet,
+                    optional_transforms=train_transforms, oversampling_factor=oversampling_factor, image_size=image_size,
+                    train_mean=mean, train_std=std)
+val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, model_type=Datasets.model_retinanet,
+                  image_size=image_size, train_mean=mean, train_std=std)
 # If you want to validate the dataset transforms visually, you can do it here.
 
 ########################################################################################################################
@@ -115,8 +117,9 @@ with open(join(save_path, 'training_parameters.txt'), 'w') as save_file:
                     f'Total training images in dataset (excluding dataset oversampling): {train_dataset.get_image_count()}\n'
                     f'Total training images in dataset (including dataset oversampling): {train_dataset.__len__()}\n'
                     f'Total validation images in dataset: {val_dataset.__len__()}\n'
+                    f'Training Dataset Mean: {mean}\n'
+                    f'Training Dataset Standard Deviation: {std}\n'
                     f'Training Transformer count: {len(train_transforms.transforms)}\n'
-                    f'Validation Transformer count: {len(val_transforms.transforms)}\n'
                     f'Optimiser: {optimiser.__class__.__name__}\n'
                     f'Learning rate schedular: {lr_schedular.__class__.__name__}\n')
 
