@@ -111,8 +111,7 @@ def plot_validation_results(validation_detections, validation_images, starting_l
 
         _, ax = plt.subplots()
         ax.axis('off')
-        ax.imshow(np.transpose(validation_images[index].to('cpu'), (1, 2, 0)))
-
+        ax.imshow(np.transpose(validation_images[index].to('cpu'), (1, 2, 0))[:, :, 0], cmap='gray')
         for label, label_results in highest_scoring_boxes.items():
             scores = label_results['scores']
             boxes = label_results['boxes']
