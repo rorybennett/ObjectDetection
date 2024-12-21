@@ -2,6 +2,8 @@
 Custom dataset class for the prostate and bladder detection. A single prostate bounding box and/or a single bladder
 bounding box are present for each image. The dataset labels should be organised in the YOLO format. Images
 will be stored in the root/images directory and labels in the root/labels directory.
+
+todo Move display of result to this class perhaps, allowing for correct labelling?
 """
 import os
 
@@ -49,7 +51,8 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
         self.model_type = model_type
         self.imgs = list(natsorted(os.listdir(self.images_root)))
         self.labels = list(natsorted(os.listdir(self.labels_root)))
-        # Transforms that are required (resizing and normalising).
+        # Transforms that are required (resizing and normalising). YOLO does not have the option of single channel
+        # greyscale (at the time of putting this together), so 3 channel greyscale is used for consistency here.
         self.required_transforms = v2.Compose([
             v2.Resize(self.image_size),
             v2.Normalize([self.train_mean], [self.train_std]),
