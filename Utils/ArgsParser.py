@@ -67,12 +67,12 @@ def get_arg_parser():
     parser.add_argument('-p',
                         '--patience',
                         type=int,
-                        default=100,
+                        default=0,
                         help='Number of epochs without validation improvement before early stopping is applied')
     parser.add_argument('-pd',
                         '--patience_delta',
                         type=int,
-                        default=0.005,
+                        default=0.001,
                         help='Minimum improvement amount to prevent early stopping')
     parser.add_argument('-lr',
                         '--learning_rate',
@@ -97,12 +97,12 @@ def get_arg_parser():
     parser.add_argument('-bw',
                         '--box_weight',
                         type=float,
-                        default=7.5,
+                        default=1,
                         help='Weight applied to box loss')
     parser.add_argument('-cw',
                         '--cls_weight',
                         type=float,
-                        default=0.5,
+                        default=1,
                         help='Weight applied to classification loss')
     parser.add_argument('-of',
                         '--oversampling_factor',
