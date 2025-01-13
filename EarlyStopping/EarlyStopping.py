@@ -17,7 +17,7 @@ import torch
 
 
 class EarlyStopping:
-    def __init__(self, patience=100, delta=0.005, save_latest=True):
+    def __init__(self, patience=0, delta=0.001, save_latest=True):
         self.patience = patience
         self.counter = 0
         self.best_score = None
@@ -39,7 +39,7 @@ class EarlyStopping:
         elif score < self.best_score + self.delta:
             print(f'No improvement (delta: {self.delta}, best: {abs(self.best_score):0.3f})... ', end='')
             self.counter += 1
-            if self.counter >= self.patience:
+            if self.counter >= self.patience != 0:
                 self.early_stop = True
             if self.save_latest:
                 self.save_checkpoint(val_loss, model, epoch, optimiser, save_path, 'model_latest.pth')
