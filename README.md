@@ -54,7 +54,7 @@ however, minor modifications should allow for other types of object detection.
    the patience value. The latest model as well as the best model are both saved, with the
    option of disabling saving of the latest model. Model saving also occurs in this class. This 
    class helps prevent overfitting using the validation set, without using the validation
-   set for parameter training.
+   set for parameter training. A patience of zero effectively disables early stopping.
 
 4. Transforms:
    - `Transformers.py`: Contains the training transforms and the validation transforms. Can
