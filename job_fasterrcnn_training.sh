@@ -1,5 +1,5 @@
-#$ -pe smp 12            # Number of cores.
-#$ -l h_vmem=7.5G        # Memory per core (max 11G per GPU).
+#$ -pe smp 8            # Number of cores.
+#$ -l h_vmem=11G        # Memory per core (max 11G per GPU).
 #$ -l h_rt=240:0:0        # Requested runtime.
 #$ -cwd                 # Change to current directory.
 #$ -j y                 # Join output and error files.
@@ -36,6 +36,7 @@ python train_fasterrcnn.py \
   -vlp="./ObjectDetectionDatasets/$val_labels_path" \
   -sp="/data/scratch/exx851/FasterRCNN/$saving_path" \
   -e=1000 \
+  -lres=1000 \
   -nc=2 \
-  -bs=16 \
+  -bs=8 \
   -of=8

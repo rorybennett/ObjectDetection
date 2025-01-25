@@ -1,50 +1,25 @@
-#$ -pe smp 12            # Number of cores.
-#$ -l h_vmem=7.5G        # Memory per core (max 11G per GPU).
+#$ -pe smp 8            # Number of cores.
+#$ -l h_vmem=11G        # Memory per core (max 11G per GPU).
 #$ -l h_rt=240:0:0        # Requested runtime.
 #$ -cwd                 # Change to current directory.
 #$ -j y                 # Join output and error files.
 #$ -o outputs/          # Change default output directory.
 #$ -l gpu=1             # Request GPU usage.
-#$ -t 1-6               # Array job.
-#$ -tc 6                # Concurrent jobs.
+#$ -t 1-1               # Array job.
+#$ -tc 1                # Concurrent jobs.
 #$ -m bea               # Email beginning, end, and aborted.
 
 module load python
 
 # Activate virtualenv
-source venv/bin/activate
+source .venv/bin/activate
 
 inputs=(
-    "ProspectiveData/prostate_Combined/train_0/images"
-    "ProspectiveData/prostate_Combined/train_0/labels"
-    "ProspectiveData/prostate_Combined/val_0/images"
-    "ProspectiveData/prostate_Combined/val_0/labels"
-    "ProspectiveData/prostate_Combined/fold_0"
-    "ProspectiveData/prostate_Combined/train_1/images"
-    "ProspectiveData/prostate_Combined/train_1/labels"
-    "ProspectiveData/prostate_Combined/val_1/images"
-    "ProspectiveData/prostate_Combined/val_1/labels"
-    "ProspectiveData/prostate_Combined/fold_1"
-    "ProspectiveData/prostate_Combined/train_2/images"
-    "ProspectiveData/prostate_Combined/train_2/labels"
-    "ProspectiveData/prostate_Combined/val_2/images"
-    "ProspectiveData/prostate_Combined/val_2/labels"
-    "ProspectiveData/prostate_Combined/fold_2"
-    "ProspectiveData/prostate_Combined/train_3/images"
-    "ProspectiveData/prostate_Combined/train_3/labels"
-    "ProspectiveData/prostate_Combined/val_3/images"
-    "ProspectiveData/prostate_Combined/val_3/labels"
-    "ProspectiveData/prostate_Combined/fold_3"
-    "ProspectiveData/prostate_Combined/train_4/images"
-    "ProspectiveData/prostate_Combined/train_4/labels"
-    "ProspectiveData/prostate_Combined/val_4/images"
-    "ProspectiveData/prostate_Combined/val_4/labels"
-    "ProspectiveData/prostate_Combined/fold_4"
-    "ProspectiveData/prostate_Combined/train_all/images"
-    "ProspectiveData/prostate_Combined/train_all/labels"
-    "ProspectiveData/prostate_Combined/val_all/images"
-    "ProspectiveData/prostate_Combined/val_all/labels"
-    "ProspectiveData/prostate_Combined/fold_all"
+    "AddedIPV/Added all IPV/prostate_Combined/images/train_all"
+    "AddedIPV/Added all IPV/prostate_Combined/labels/train_all"
+    "AddedIPV/Added all IPV/prostate_Combined/images/val_all"
+    "AddedIPV/Added all IPV/prostate_Combined/labels/val_all"
+    "AddedIPV/Added all IPV/prostate_Combined/fold_all"
 )
 
 
@@ -60,6 +35,8 @@ python train_retinanet.py \
   -vip="./ObjectDetectionDatasets/$val_images_path" \
   -vlp="./ObjectDetectionDatasets/$val_labels_path" \
   -sp="/data/scratch/exx851/RetinaNet/$saving_path" \
+  -e=1000 \
+  -lres=1000 \
   -nc=1 \
-  -of=8 \
-  -we=100
+  -bs=8 \
+  -of=8
