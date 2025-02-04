@@ -64,8 +64,8 @@ train_transforms = Transformers.get_training_transforms()
 mean, std = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_retinanet,
                 train_mean=0, train_std=0, image_size=(0, 0)).get_mean_and_std()
 train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_retinanet,
-                    optional_transforms=train_transforms, oversampling_factor=oversampling_factor, image_size=image_size,
-                    train_mean=mean, train_std=std)
+                    optional_transforms=train_transforms, oversampling_factor=oversampling_factor,
+                    image_size=image_size, train_mean=mean, train_std=std)
 val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, model_type=Datasets.model_retinanet,
                   image_size=image_size, train_mean=mean, train_std=std)
 # If you want to validate the dataset transforms visually, you can do it here.
@@ -195,6 +195,7 @@ def main():
                 targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
                 # Forward pass.
                 loss_dict, _ = custom_model.forward(images, targets)
+
                 # Extract each loss.
                 cls_loss = loss_dict['classification']
                 bbox_loss = loss_dict['bbox_regression']
