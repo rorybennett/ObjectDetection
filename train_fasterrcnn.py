@@ -53,6 +53,8 @@ momentum = args.momentum  # Optimiser momentum.
 weight_decay = args.weight_decay  # Optimiser weight decay.
 box_weight = args.box_weight  # Weight applied to box loss.
 cls_weight = args.cls_weight  # Weight applied to classification loss.
+objectness_weight = args.objectness_weight  # Weight applied to objectness loss.
+rpn_weight = args.rpn_box_weight  # Weight applied to rpn box loss.
 oversampling_factor = args.oversampling_factor  # Oversampling factor.
 save_latest = args.save_latest  # Save latest model as well as the best model.pth.
 
@@ -166,7 +168,7 @@ def main():
             objectness_loss = loss_dict['loss_objectness']
             rpn_box_loss = loss_dict['loss_rpn_box_reg']
             # Calculate total loss, can apply weights here.
-            losses = cls_loss * cls_weight + bbox_loss * box_weight + objectness_loss + rpn_box_loss
+            losses = cls_loss * cls_weight + bbox_loss * box_weight + objectness_loss * objectness_weight + rpn_box_loss * rpn_weight
             # Check for NaNs or Infs.
             if torch.isnan(losses).any() or torch.isinf(losses).any():
                 print("Loss has NaNs or Infs, skipping this batch")
@@ -205,7 +207,7 @@ def main():
                 objectness_loss = loss_dict['loss_objectness']
                 rpn_box_loss = loss_dict['loss_rpn_box_reg']
                 # Calculate total loss.
-                losses = cls_loss * cls_weight + bbox_loss * box_weight + objectness_loss + rpn_box_loss
+                losses = cls_loss * cls_weight + bbox_loss * box_weight + objectness_loss * objectness_weight + rpn_box_loss * rpn_weight
                 # Epoch loss per batch.
                 epoch_val_loss[0] += losses.item()
                 epoch_val_loss[1] += cls_loss.item()

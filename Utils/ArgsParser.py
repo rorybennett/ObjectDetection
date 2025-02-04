@@ -43,7 +43,7 @@ def get_arg_parser():
                         '--number_of_classes',
                         type=int,
                         required=True,
-                        help='Number of classes being considered')
+                        help='Number of classes being considered (FasterRCNN has +1 due to background class)')
     parser.add_argument('-e',
                         '--epochs',
                         type=int,
@@ -104,6 +104,16 @@ def get_arg_parser():
                         type=float,
                         default=1,
                         help='Weight applied to classification loss')
+    parser.add_argument('-ow',
+                        '--objectness_weight',
+                        type=float,
+                        default=1,
+                        help='Weight applied to objectness loss')
+    parser.add_argument('-rpw',
+                        '--rpn_box_weight',
+                        type=float,
+                        default=1,
+                        help='Weight applied to rpn box loss')
     parser.add_argument('-of',
                         '--oversampling_factor',
                         type=int,
