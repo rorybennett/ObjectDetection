@@ -11,7 +11,7 @@ from Datasets.ProstateBladderDataset import ProstateBladderDataset as PBD
 from DetectionModels.FasterRCNN import FasterRCNN
 from EarlyStopping.EarlyStopping import EarlyStopping
 from Transformers import Transformers
-from Utils import ArgsParser, Utils
+from Utils import CustomArgParser, Utils
 
 ########################################################################################################################
 # Track run time of script.

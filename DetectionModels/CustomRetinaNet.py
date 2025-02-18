@@ -5,12 +5,25 @@ I think this is set up correctly, but I could be grossly mistaken.
 
 No pretrained weights are used, and the number of classes is equal to detection classes.
 """
-from torchvision.models.detection import retinanet_resnet50_fpn_v2
+import torchvision
+from torchvision.models.detection import retinanet_resnet50_fpn_v2, RetinaNet
+from torchvision.models.detection.anchor_utils import AnchorGenerator
 
 
-class RetinaNet:
-    def __init__(self, weights=None, num_classes=None):
-        self.model = retinanet_resnet50_fpn_v2(weights=weights, num_classes=num_classes)
+class CustomRetinaNet:
+    def __init__(self, weights=None, num_classes=None, backbone_type='resnet50_fpn_v2'):
+        if backbone_type == 'resnet50_fpn_v2':
+            self.model = retinanet_resnet50_fpn_v2(weights=weights, num_classes=num_classes)
+        elif backbone_type == 'mobilenet_v2':
+            backbone = torchvision.models.mobilenet_v2(weights=weights).features
+            backbone.out_channels = 1280
+            anchor_generator = AnchorGenerator(
+                sizes=((32, 64, 128, 256, 512),),
+                aspect_ratios=((0.5, 1.0, 2.0),)
+            )
+            self.model = RetinaNet(backbone,
+                                   num_classes=num_classes,
+                                   anchor_generator=anchor_generator)
 
     def forward(self, images, targets=None):
         """

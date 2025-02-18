@@ -8,10 +8,10 @@ from torch.nn.utils import clip_grad_norm_
 
 import Datasets
 from Datasets.ProstateBladderDataset import ProstateBladderDataset as PBD
-from DetectionModels.RetinaNet import RetinaNet
+from DetectionModels.CustomRetinaNet import CustomRetinaNet
 from EarlyStopping.EarlyStopping import EarlyStopping
 from Transformers import Transformers
-from Utils import ArgsParser, Utils
+from Utils import CustomArgParser, Utils
 
 ########################################################################################################################
 # Track run time of script.
@@ -21,7 +21,8 @@ script_start = datetime.now()
 ########################################################################################################################
 # Set seeds for semi-reproducibility.
 ########################################################################################################################
-torch.manual_seed(2024)
+seed = 2024
+torch.manual_seed(seed)
 
 ########################################################################################################################
 # Set device and empty cuda cache.
@@ -32,7 +33,8 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 ########################################################################################################################
 # Fetch parser and set variables from parser args.
 ########################################################################################################################
-args = ArgsParser.get_arg_parser()
+CAP = CustomArgParser.CustomArgParser()
+args = CAP.parser.parse_args()
 train_images_path = args.train_images_path  # Path to training images directory.
 train_labels_path = args.train_labels_path  # Path to training labels directory.
 val_images_path = args.val_images_path  # Path to validation images directory.
@@ -54,6 +56,7 @@ weight_decay = args.weight_decay  # Optimiser weight decay.
 box_weight = args.box_weight  # Weight applied to box loss.
 cls_weight = args.cls_weight  # Weight applied to classification loss.
 oversampling_factor = args.oversampling_factor  # Oversampling factor.
+backbone_type = args.backbone_type  # Type of backbone model should use.
 save_latest = args.save_latest  # Save latest model as well as the best model.pth.
 
 ########################################################################################################################
@@ -61,15 +64,19 @@ save_latest = args.save_latest  # Save latest model as well as the best model.pt
 ########################################################################################################################
 train_transforms = Transformers.get_training_transforms()
 
-mean, std = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_retinanet,
-                train_mean=0, train_std=0, image_size=(0, 0)).get_mean_and_std()
+train_mean, train_std = PBD(images_root=train_images_path, labels_root=train_labels_path,
+                            model_type=Datasets.model_retinanet,
+                            train_mean=0, train_std=0, image_size=(0, 0)).get_mean_and_std()
 train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_retinanet,
                     optional_transforms=train_transforms, oversampling_factor=oversampling_factor,
-                    image_size=image_size, train_mean=mean, train_std=std)
+                    image_size=image_size, train_mean=train_mean, train_std=train_std)
 val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, model_type=Datasets.model_retinanet,
-                  image_size=image_size, train_mean=mean, train_std=std)
+                  image_size=image_size, train_mean=train_mean, train_std=train_std)
 # If you want to validate the dataset transforms visually, you can do it here.
-
+# for i in range(len(train_dataset)):
+#     train_dataset.display_transforms(i)
+#
+# exit()
 ########################################################################################################################
 # Set up dataloaders.
 ########################################################################################################################
@@ -82,7 +89,7 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shu
 # Set up model, optimiser, and learning rate scheduler (RetinaNet).
 ########################################################################################################################
 print(f'Loading RetinaNet model...', end=' ')
-custom_model = RetinaNet(num_classes=num_classes)
+custom_model = CustomRetinaNet(num_classes=num_classes, backbone_type=backbone_type)
 custom_model.model.to(device)
 params = [p for p in custom_model.model.parameters() if p.requires_grad]
 optimiser = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
@@ -92,36 +99,10 @@ print(f'Model loaded.')
 ########################################################################################################################
 # Save training parameters to file and display to screen.
 ########################################################################################################################
-with open(join(save_path, 'training_parameters.txt'), 'w') as save_file:
-    save_file.write(f'Start time: {script_start}\n'
-                    f'Training images path: {train_images_path}\n'
-                    f'Training labels path: {train_labels_path}\n'
-                    f'Validation images path: {val_images_path}\n'
-                    f'Validation labels path: {val_labels_path}\n'
-                    f'Number of training classes: {num_classes}\n'
-                    f'Save path: {save_path}\n'
-                    f'Batch size: {batch_size}\n'
-                    f'Epochs: {total_epochs}\n'
-                    f'Warmup Epochs: {warmup_epochs}\n'
-                    f'Device: {device}\n'
-                    f'Patience: {patience}\n'
-                    f'Patience delta: {patience_delta}\n'
-                    f'Image Size: {image_size}\n'
-                    f'Optimiser learning rate: {learning_rate}.\n'
-                    f'Optimiser learning rate restart frequency: {learning_restart}\n'
-                    f'Optimiser momentum: {momentum}\n'
-                    f'Optimiser weight decay: {weight_decay}\n'
-                    f'Oversampling factor: {oversampling_factor}\n'
-                    f'Box weight: {box_weight}\n'
-                    f'Classification weight: {cls_weight}\n'
-                    f'Total training images in dataset (excluding dataset oversampling): {train_dataset.get_image_count()}\n'
-                    f'Total training images in dataset (including dataset oversampling): {train_dataset.__len__()}\n'
-                    f'Total validation images in dataset: {val_dataset.__len__()}\n'
-                    f'Training Dataset Mean: {mean}\n'
-                    f'Training Dataset Standard Deviation: {std}\n'
-                    f'Training Transformer count: {len(train_transforms.transforms)}\n'
-                    f'Optimiser: {optimiser.__class__.__name__}\n'
-                    f'Learning rate schedular: {lr_schedular.__class__.__name__}\n')
+CAP.save_args(save_path, script_start=script_start, seed=seed, device=device, device_name=Utils.get_device_name(),
+              train_mean=train_mean, train_std=train_std, train_dataset_len=train_dataset.__len__(),
+              val_dataset_len=val_dataset.__len__(), transformer_count=len(train_transforms.transforms),
+              optimiser_name=optimiser.__class__.__name__, lr_schedular_name=lr_schedular.__class__.__name__)
 
 print('=====================================================================================================\n'
       f'Start time: {script_start}\n'
@@ -237,7 +218,8 @@ def main():
     ####################################################################################################################
     # On training complete, pass through validation images and plot them using best model (must be reloaded).
     ####################################################################################################################
-    custom_model.model.load_state_dict(torch.load(join(save_path, 'model_best.pth'))['model_state_dict'])
+    custom_model.model.load_state_dict(torch.load(join(save_path, 'model_best.pth'),
+                                                  weights_only=True)['model_state_dict'])
     custom_model.model.eval()
     with torch.no_grad():
         counter = 0
@@ -256,8 +238,8 @@ def main():
     script_end = datetime.now()
     run_time = script_end - script_start
     with open(join(save_path, 'training_parameters.txt'), 'a') as save_file:
-        save_file.write(f'Final Epoch Reached: {final_epoch_reached}\n'
-                        f'Best Epoch: {early_stopping.best_epoch}\n'
+        save_file.write(f'\n\nFinal Epoch Reached: {final_epoch_reached}\n'
+                        f'Best Epoch: {early_stopping.best_epoch + 1}\n'
                         f"End time: {script_end.strftime('%Y-%m-%d  %H:%M:%S')}\n"
                         f'Total run time: {run_time}')
 
