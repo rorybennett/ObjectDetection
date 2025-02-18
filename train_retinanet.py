@@ -89,9 +89,9 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shu
 # Set up model, optimiser, and learning rate scheduler (RetinaNet).
 ########################################################################################################################
 print(f'Loading RetinaNet model {backbone_type}...', end=' ')
-custom_model = CustomRetinaNet(num_classes=num_classes, backbone_type=backbone_type)
-custom_model.model.to(device)
-params = [p for p in custom_model.model.parameters() if p.requires_grad]
+custom_retinanet = CustomRetinaNet(num_classes=num_classes, backbone_type=backbone_type)
+custom_retinanet.model.to(device)
+params = [p for p in custom_retinanet.model.parameters() if p.requires_grad]
 optimiser = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
 lr_schedular = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimiser, T_0=learning_restart, eta_min=0)
 print(f'Model loaded.')
@@ -130,7 +130,7 @@ def main():
         ################################################################################################################
         # Training step within epoch.
         ################################################################################################################
-        custom_model.model.train()
+        custom_retinanet.model.train()
         epoch_train_loss = [0, 0, 0]
         for images, targets in train_loader:
             images = list(image.to(device) for image in images)
@@ -138,7 +138,7 @@ def main():
             # Zero the gradients.
             optimiser.zero_grad()
             # Forward pass.
-            loss_dict = custom_model.forward(images, targets)
+            loss_dict = custom_retinanet.forward(images, targets)
             # Extract each loss.
             cls_loss = loss_dict['classification']
             bbox_loss = loss_dict['bbox_regression']
@@ -151,7 +151,7 @@ def main():
             # Calculate gradients.
             losses.backward()
             # Apply gradient clipping.
-            clip_grad_norm_(custom_model.model.parameters(), 2)
+            clip_grad_norm_(custom_retinanet.model.parameters(), 2)
             optimiser.step()
             # Epoch loss per batch.
             epoch_train_loss[0] += losses.item()
@@ -167,7 +167,7 @@ def main():
         ################################################################################################################
         # Validation step within epoch.
         ################################################################################################################
-        custom_model.model.eval()
+        custom_retinanet.model.eval()
         epoch_val_loss = [0, 0, 0]
         # No gradient calculations.
         with torch.no_grad():
@@ -175,7 +175,7 @@ def main():
                 images = list(image.to(device) for image in images)
                 targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
                 # Forward pass.
-                loss_dict, _ = custom_model.forward(images, targets)
+                loss_dict, _ = custom_retinanet.forward(images, targets)
 
                 # Extract each loss.
                 cls_loss = loss_dict['classification']
@@ -205,7 +205,7 @@ def main():
         ################################################################################################################
         final_epoch_reached = epoch
         if final_epoch_reached + 1 > warmup_epochs:
-            early_stopping(epoch_val_loss[0], custom_model.model, epoch, optimiser, save_path)
+            early_stopping(epoch_val_loss[0], custom_retinanet.model, epoch, optimiser, save_path)
 
         Utils.plot_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
                           save_path)
@@ -218,15 +218,15 @@ def main():
     ####################################################################################################################
     # On training complete, pass through validation images and plot them using best model (must be reloaded).
     ####################################################################################################################
-    custom_model.model.load_state_dict(torch.load(join(save_path, 'model_best.pth'),
-                                                  weights_only=True)['model_state_dict'])
-    custom_model.model.eval()
+    custom_retinanet.model.load_state_dict(torch.load(join(save_path, 'model_best.pth'),
+                                                      weights_only=True)['model_state_dict'])
+    custom_retinanet.model.eval()
     with torch.no_grad():
         counter = 0
         for images, targets in val_loader:
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-            _, detections = custom_model.forward(images, targets)
+            _, detections = custom_retinanet.forward(images, targets)
 
             Utils.plot_validation_results(detections, images, 0, 1, counter, save_path)
 
