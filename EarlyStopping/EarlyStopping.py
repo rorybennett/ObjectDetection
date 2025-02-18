@@ -55,6 +55,6 @@ class EarlyStopping:
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimiser.state_dict(),
+            # 'optimizer_state_dict': optimiser.state_dict(),
         }, join(save_path, model_name))
         self.val_loss_min = val_loss
