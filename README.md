@@ -20,6 +20,10 @@ Resnet50 FPN backbone (version 2).
 3. RetinaNet: Use `train_retinanet.py` to train and validate a retinanet model using a
 Resnet50 FPN backbone (version 2).
 
+After much back-and-forth, Resnet50_fpn_v2 seems to be the smallest backbone. Using the example
+(for RetinaNet) that has mobilenet_v2 as the backbone results in a save file that is far
+larger than the Resnet50_fpn_v2 backbone.
+
 ## Repo contents
 The packages in this repo were created under the assumption of prostate and bladder detection,
 however, minor modifications should allow for other types of object detection.
