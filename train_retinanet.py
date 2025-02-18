@@ -88,7 +88,7 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shu
 ########################################################################################################################
 # Set up model, optimiser, and learning rate scheduler (RetinaNet).
 ########################################################################################################################
-print(f'Loading RetinaNet model...', end=' ')
+print(f'Loading RetinaNet model {backbone_type}...', end=' ')
 custom_model = CustomRetinaNet(num_classes=num_classes, backbone_type=backbone_type)
 custom_model.model.to(device)
 params = [p for p in custom_model.model.parameters() if p.requires_grad]
@@ -198,7 +198,7 @@ def main():
         print(f"\t{time_now}  -  Epoch {epoch + 1}/{total_epochs}, "
               f"Train Loss: {training_losses[-1][0]:0.3f}, "
               f"Val Loss: {val_losses[-1][0]:0.3f}, "
-              f"Learning Rate: {lr_schedular.get_last_lr()[0]:0.6f},", end=' ', flush=True)
+              f"Learning Rate: {lr_schedular.get_last_lr()[0]:0.3f},", end=' ', flush=True)
 
         ################################################################################################################
         # Check for early stopping. If patience reached, model is saved and final plots are made.
