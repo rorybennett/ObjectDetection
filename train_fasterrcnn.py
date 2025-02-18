@@ -8,7 +8,7 @@ from torch.nn.utils import clip_grad_norm_
 
 import Datasets
 from Datasets.ProstateBladderDataset import ProstateBladderDataset as PBD
-from DetectionModels.FasterRCNN import FasterRCNN
+from DetectionModels.CustomFasterRCNN import CustomFasterRCNN
 from EarlyStopping.EarlyStopping import EarlyStopping
 from Transformers import Transformers
 from Utils import CustomArgParser, Utils
@@ -21,7 +21,8 @@ script_start = datetime.now()
 ########################################################################################################################
 # Set seeds for semi-reproducibility.
 ########################################################################################################################
-torch.manual_seed(2024)
+seed = 2024
+torch.manual_seed(seed)
 
 ########################################################################################################################
 # Set device and empty cuda cache.
@@ -32,7 +33,8 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 ########################################################################################################################
 # Fetch parser and set variables from parser args.
 ########################################################################################################################
-args = ArgsParser.get_arg_parser()
+CAP = CustomArgParser.CustomArgParser()
+args = CAP.parser.parse_args()
 train_images_path = args.train_images_path  # Path to training images directory.
 train_labels_path = args.train_labels_path  # Path to training labels directory.
 val_images_path = args.val_images_path  # Path to validation images directory.
@@ -56,6 +58,7 @@ cls_weight = args.cls_weight  # Weight applied to classification loss.
 objectness_weight = args.objectness_weight  # Weight applied to objectness loss.
 rpn_weight = args.rpn_box_weight  # Weight applied to rpn box loss.
 oversampling_factor = args.oversampling_factor  # Oversampling factor.
+backbone_type = args.backbone_type  # Type of backbone model should use.
 save_latest = args.save_latest  # Save latest model as well as the best model.pth.
 
 ########################################################################################################################
@@ -63,13 +66,15 @@ save_latest = args.save_latest  # Save latest model as well as the best model.pt
 ########################################################################################################################
 train_transforms = Transformers.get_training_transforms()
 
-mean, std = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_fasterrcnn,
-                train_mean=0, train_std=0, image_size=(0, 0)).get_mean_and_std()
+train_mean, train_std = PBD(images_root=train_images_path, labels_root=train_labels_path,
+                            model_type=Datasets.model_fasterrcnn,
+                            train_mean=0, train_std=0, image_size=(0, 0)).get_mean_and_std()
 train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_fasterrcnn,
-                    optional_transforms=train_transforms, oversampling_factor=oversampling_factor, image_size=image_size,
-                    train_mean=mean, train_std=std)
+                    optional_transforms=train_transforms, oversampling_factor=oversampling_factor,
+                    image_size=image_size,
+                    train_mean=train_mean, train_std=train_std)
 val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, model_type=Datasets.model_fasterrcnn,
-                  image_size=image_size, train_mean=mean, train_std=std)
+                  image_size=image_size, train_mean=train_mean, train_std=train_std)
 # If you want to validate the dataset transforms visually, you can do it here.
 # for i in range(len(train_dataset)):
 #     train_dataset.display_transforms(i)
@@ -86,10 +91,10 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shu
 ########################################################################################################################
 # Set up model, optimiser, and learning rate scheduler (FasterRCNN).
 ########################################################################################################################
-print(f'Loading FasterRCNN model...', end=' ')
-custom_model = FasterRCNN(num_classes=num_classes)
-custom_model.model.to(device)
-params = [p for p in custom_model.model.parameters() if p.requires_grad]
+print(f'Loading FasterRCNN model {backbone_type}...', end=' ')
+custom_fasterrcnn = CustomFasterRCNN(num_classes=num_classes)
+custom_fasterrcnn.model.to(device)
+params = [p for p in custom_fasterrcnn.model.parameters() if p.requires_grad]
 optimiser = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
 lr_schedular = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimiser, T_0=learning_restart, eta_min=0)
 print(f'Model loaded.')
@@ -97,35 +102,10 @@ print(f'Model loaded.')
 ########################################################################################################################
 # Save training parameters to file and display to screen.
 ########################################################################################################################
-with open(join(save_path, 'training_parameters.txt'), 'w') as save_file:
-    save_file.write(f'Start time: {script_start}\n'
-                    f'Training images path: {train_images_path}\n'
-                    f'Training labels path: {train_labels_path}\n'
-                    f'Validation images path: {val_images_path}\n'
-                    f'Validation labels path: {val_labels_path}\n'
-                    f'Save path: {save_path}\n'
-                    f'Batch size: {batch_size}\n'
-                    f'Epochs: {total_epochs}\n'
-                    f'Warmup Epochs: {warmup_epochs}\n'
-                    f'Device: {device}\n'
-                    f'Patience: {patience}\n'
-                    f'Patience delta: {patience_delta}\n'
-                    f'Image Size: {image_size}\n'
-                    f'Optimiser learning rate: {learning_rate}.\n'
-                    f'Optimiser learning rate restart frequency: {learning_restart}\n'
-                    f'Optimiser momentum: {momentum}\n'
-                    f'Optimiser weight decay: {weight_decay}\n'
-                    f'Oversampling factor: {oversampling_factor}\n'
-                    f'Box weight: {box_weight}\n'
-                    f'Classification weight: {cls_weight}\n'
-                    f'Total training images in dataset (excluding dataset oversampling): {train_dataset.get_image_count()}\n'
-                    f'Total training images in dataset (including dataset oversampling): {train_dataset.__len__()}\n'
-                    f'Total validation images in dataset: {val_dataset.__len__()}\n'
-                    f'Training Dataset Mean: {mean}\n'
-                    f'Training Dataset Standard Deviation: {std}\n'
-                    f'Training Transformer count: {len(train_transforms.transforms)}\n'
-                    f'Optimiser: {optimiser.__class__.__name__}\n'
-                    f'Learning rate schedular: {lr_schedular.__class__.__name__}\n')
+CAP.save_args(save_path, script_start=script_start, seed=seed, device=device, device_name=Utils.get_device_name(),
+              train_mean=train_mean, train_std=train_std, train_dataset_len=train_dataset.__len__(),
+              val_dataset_len=val_dataset.__len__(), transformer_count=len(train_transforms.transforms),
+              optimiser_name=optimiser.__class__.__name__, lr_schedular_name=lr_schedular.__class__.__name__)
 
 print('=====================================================================================================\n'
       f'Start time: {script_start}\n'
@@ -153,7 +133,7 @@ def main():
         ################################################################################################################
         # Training step within epoch.
         ################################################################################################################
-        custom_model.model.train()
+        custom_fasterrcnn.model.train()
         epoch_train_loss = [0, 0, 0]
         for images, targets in train_loader:
             images = list(image.to(device) for image in images)
@@ -161,7 +141,7 @@ def main():
             # Zero the gradients.
             optimiser.zero_grad()
             # Forward pass.
-            loss_dict = custom_model.forward(images, targets)
+            loss_dict = custom_fasterrcnn.forward(images, targets)
             # Extract each loss.
             cls_loss = loss_dict['loss_classifier']
             bbox_loss = loss_dict['loss_box_reg']
@@ -176,7 +156,7 @@ def main():
             # Calculate gradients.
             losses.backward()
             # Apply gradient clipping.
-            clip_grad_norm_(custom_model.model.parameters(), 2)
+            clip_grad_norm_(custom_fasterrcnn.model.parameters(), 2)
             optimiser.step()
             # Epoch loss per batch.
             epoch_train_loss[0] += losses.item()
@@ -192,7 +172,7 @@ def main():
         ################################################################################################################
         # Validation step within epoch.
         ################################################################################################################
-        custom_model.model.eval()
+        custom_fasterrcnn.model.eval()
         epoch_val_loss = [0, 0, 0]
         # No gradient calculations.
         with torch.no_grad():
@@ -200,7 +180,7 @@ def main():
                 images = list(image.to(device) for image in images)
                 targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
                 # Forward pass.
-                loss_dict, _ = custom_model.forward(images, targets)
+                loss_dict, _ = custom_fasterrcnn.forward(images, targets)
                 # Extract each loss.
                 cls_loss = loss_dict['loss_classifier']
                 bbox_loss = loss_dict['loss_box_reg']
@@ -231,7 +211,7 @@ def main():
         ################################################################################################################
         final_epoch_reached = epoch
         if final_epoch_reached + 1 > warmup_epochs:
-            early_stopping(epoch_val_loss[0], custom_model.model, epoch, optimiser, save_path)
+            early_stopping(epoch_val_loss[0], custom_fasterrcnn.model, epoch, optimiser, save_path)
 
         Utils.plot_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
                           save_path)
@@ -244,14 +224,15 @@ def main():
     ####################################################################################################################
     # On training complete, pass through validation images and plot them using best model (must be reloaded).
     ####################################################################################################################
-    custom_model.model.load_state_dict(torch.load(join(save_path, 'model_best.pth'))['model_state_dict'])
-    custom_model.model.eval()
+    custom_fasterrcnn.model.load_state_dict(
+        torch.load(join(save_path, 'model_best.pth'), weights_only=True)['model_state_dict'])
+    custom_fasterrcnn.model.eval()
     with torch.no_grad():
         counter = 0
         for images, targets in val_loader:
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-            _, detections = custom_model.forward(images, targets)
+            _, detections = custom_fasterrcnn.forward(images, targets)
 
             Utils.plot_validation_results(detections, images, 1, 1, counter, save_path)
 
@@ -264,7 +245,7 @@ def main():
     run_time = script_end - script_start
     with open(join(save_path, 'training_parameters.txt'), 'a') as save_file:
         save_file.write(f'Final Epoch Reached: {final_epoch_reached}\n'
-                        f'Best Epoch: {early_stopping.best_epoch}\n'
+                        f'Best Epoch: {early_stopping.best_epoch + 1}\n'
                         f"End time: {script_end.strftime('%Y-%m-%d  %H:%M:%S')}\n"
                         f'Total run time: {run_time}')
 

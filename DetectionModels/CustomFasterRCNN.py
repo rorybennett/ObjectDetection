@@ -6,12 +6,16 @@ I think this is set up correctly, but I could be grossly mistaken.
 No pretrained weights are used, and the number of classes is equal to detection classes + 1 (for background).
 """
 import torch
-from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2
+from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2, fasterrcnn_mobilenet_v3_large_fpn, \
+    fasterrcnn_mobilenet_v3_large_320_fpn
 
 
-class FasterRCNN:
-    def __init__(self, weights=None, num_classes=None):
-        self.model = fasterrcnn_resnet50_fpn_v2(weights=weights, num_classes=num_classes)
+class CustomFasterRCNN:
+    def __init__(self, weights=None, num_classes=None, backbone_type='resnet50_fpn_v2'):
+        if backbone_type == 'resnet50_fpn_v2':
+            self.model = fasterrcnn_resnet50_fpn_v2(weights=weights, num_classes=num_classes)
+        elif backbone_type == 'mobilenet_v3_large_320_fpn':
+            self.model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=weights, num_classes=num_classes)
 
     def forward(self, images, targets=None):
         """
