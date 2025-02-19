@@ -52,10 +52,11 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
         self.imgs = list(natsorted(os.listdir(self.images_root)))
         self.labels = list(natsorted(os.listdir(self.labels_root)))
         # Transforms that are required (resizing and normalising). YOLO does not have the option of single channel
-        # greyscale (at the time of putting this together), so 3 channel greyscale is used for consistency here.
+        # greyscale (at the time of putting this together), so 3 channel greyscale is used for consistency here. It
+        # resizing and normalisation take place in the RetinaNet and FasterRCNN packages by default.
         self.required_transforms = v2.Compose([
-            v2.Resize(self.image_size),
-            v2.Normalize([self.train_mean], [self.train_std]),
+            # v2.Resize(self.image_size),
+            # v2.Normalize([self.train_mean], [self.train_std]),
             v2.Grayscale(num_output_channels=3)
         ])
 
