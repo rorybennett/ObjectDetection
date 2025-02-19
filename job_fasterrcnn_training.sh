@@ -6,8 +6,8 @@
 #$ -o outputs/          # Change default output directory.
 #$ -l gpu=1             # Request GPU usage.
 #$ -l gpu_type=ampere   # GPU type
-#$ -t 1-2               # Array job.
-#$ -tc 2                # Concurrent jobs.
+#$ -t 1-7               # Array job.
+#$ -tc 7                # Concurrent jobs.
 #$ -m bea               # Email beginning, end, and aborted.
 
 module load python
@@ -16,16 +16,41 @@ module load python
 source .venv/bin/activate
 
 inputs=(
+    "ProspectiveData/prostate_Combined/images/train_0"
+    "ProspectiveData/prostate_Combined/labels/train_0"
+    "ProspectiveData/prostate_Combined/images/val_0"
+    "ProspectiveData/prostate_Combined/labels/val_0"
+    "ProspectiveData/prostate_Combined/fold_0"
+    "ProspectiveData/prostate_Combined/images/train_1"
+    "ProspectiveData/prostate_Combined/labels/train_1"
+    "ProspectiveData/prostate_Combined/images/val_1"
+    "ProspectiveData/prostate_Combined/labels/val_1"
+    "ProspectiveData/prostate_Combined/fold_1"
+    "ProspectiveData/prostate_Combined/images/train_2"
+    "ProspectiveData/prostate_Combined/labels/train_2"
+    "ProspectiveData/prostate_Combined/images/val_2"
+    "ProspectiveData/prostate_Combined/labels/val_2"
+    "ProspectiveData/prostate_Combined/fold_2"
+    "ProspectiveData/prostate_Combined/images/train_3"
+    "ProspectiveData/prostate_Combined/labels/train_3"
+    "ProspectiveData/prostate_Combined/images/val_3"
+    "ProspectiveData/prostate_Combined/labels/val_3"
+    "ProspectiveData/prostate_Combined/fold_3"
     "ProspectiveData/prostate_Combined/images/train_4"
     "ProspectiveData/prostate_Combined/labels/train_4"
     "ProspectiveData/prostate_Combined/images/val_4"
     "ProspectiveData/prostate_Combined/labels/val_4"
-    "ProspectiveData/prostate_Combined_patience100/fold_4"
+    "ProspectiveData/prostate_Combined/fold_4"
     "ProspectiveData/prostate_Combined/images/train_all"
     "ProspectiveData/prostate_Combined/labels/train_all"
     "ProspectiveData/prostate_Combined/images/val_all"
     "ProspectiveData/prostate_Combined/labels/val_all"
-    "ProspectiveData/prostate_Combined_patience100/fold_all"
+    "ProspectiveData/prostate_Combined/fold_all"
+    "AddedIPV/Added all IPV/prostate_Combined/images/train_all"
+    "AddedIPV/Added all IPV/prostate_Combined/labels/train_all"
+    "AddedIPV/Added all IPV/prostate_Combined/images/val_all"
+    "AddedIPV/Added all IPV/prostate_Combined/labels/val_all"
+    "AddedIPV/Added all IPV/prostate_Combined/fold_all"
 )
 
 
@@ -46,4 +71,5 @@ python train_fasterrcnn.py \
   -nc=2 \
   -bs=32 \
   -of=8 \
-  -p=100
+  -p=100 \
+  -bbt='fasterrcnn_resnet50_fpn_v2'
