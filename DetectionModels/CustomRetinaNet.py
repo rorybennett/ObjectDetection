@@ -8,13 +8,14 @@ No pretrained weights are used, and the number of classes is equal to detection 
 import torchvision
 from torchvision.models.detection import retinanet_resnet50_fpn_v2, RetinaNet
 from torchvision.models.detection.anchor_utils import AnchorGenerator
+from . import retinanet_backbones as backbones
 
 
 class CustomRetinaNet:
-    def __init__(self, weights=None, num_classes=None, backbone_type='resnet50_fpn_v2'):
-        if backbone_type == 'resnet50_fpn_v2':
-            self.model = retinanet_resnet50_fpn_v2(weights=weights, num_classes=num_classes)
-        elif backbone_type == 'mobilenet_v2':
+    def __init__(self, backbone_type, weights=None, num_classes=None, **kwargs):
+        if backbone_type == backbones['retinanet_resnet50_fpn_v2']:
+            self.model = retinanet_resnet50_fpn_v2(weights=weights, num_classes=num_classes, **kwargs)
+        elif backbone_type == backbones['mobilenet_v2']:
             backbone = torchvision.models.mobilenet_v2(weights=weights).features
             backbone.out_channels = 1280
             anchor_generator = AnchorGenerator(
@@ -23,7 +24,10 @@ class CustomRetinaNet:
             )
             self.model = RetinaNet(backbone,
                                    num_classes=num_classes,
-                                   anchor_generator=anchor_generator)
+                                   anchor_generator=anchor_generator, **kwargs)
+        else:
+            print(f"\n\n{backbone_type} is not available, choose between:\n{backbones.keys()}\n\n")
+            exit()
 
     def forward(self, images, targets=None):
         """
