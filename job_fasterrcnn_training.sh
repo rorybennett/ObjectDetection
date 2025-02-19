@@ -9,6 +9,7 @@
 #$ -t 1-7               # Array job.
 #$ -tc 7                # Concurrent jobs.
 #$ -m bea               # Email beginning, end, and aborted.
+#$ -l rocky
 
 module load python
 
