@@ -55,7 +55,7 @@ class CustomArgParser:
                                  '--backbone_type',
                                  type=str,
                                  required=True,
-                                 help='Model backbone (default is resnet50_fpn_v2 but it is still a required input)')
+                                 help='Model backbone, renet50_fpn_v2 seems to be the best')
 
         ################################################################################################################
         # Training parameters
@@ -75,7 +75,6 @@ class CustomArgParser:
                                  type=int,
                                  default=8,
                                  help='Training and validation batch size')
-
         self.parser.add_argument('-p',
                                  '--patience',
                                  type=int,
@@ -139,8 +138,8 @@ class CustomArgParser:
         self.parser.add_argument('-is',
                                  '--image_size',
                                  type=int,
-                                 default=(600, 600),
-                                 help='Scaled image size, applied to all images using the resize transform')
+                                 default=600,
+                                 help='Scaled image size, applied to all images, aspect ratio maintained')
         self.parser.add_argument('-of',
                                  '--oversampling_factor',
                                  type=int,
