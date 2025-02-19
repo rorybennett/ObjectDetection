@@ -7,6 +7,7 @@ from torch import optim
 from torch.nn.utils import clip_grad_norm_
 
 import Datasets
+import DetectionModels
 from Datasets.ProstateBladderDataset import ProstateBladderDataset as PBD
 from DetectionModels.CustomRetinaNet import CustomRetinaNet
 from EarlyStopping.EarlyStopping import EarlyStopping
@@ -88,8 +89,12 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shu
 ########################################################################################################################
 # Set up model, optimiser, and learning rate scheduler (RetinaNet).
 ########################################################################################################################
+train_mean = [train_mean] * 3
+train_std = [train_std] * 3
 print(f'Loading RetinaNet model {backbone_type}...', end=' ')
-custom_retinanet = CustomRetinaNet(num_classes=num_classes, backbone_type=backbone_type)
+custom_retinanet = CustomRetinaNet(num_classes=num_classes,
+                                   backbone_type=DetectionModels.retinanet_backbones[backbone_type],
+                                   min_size=image_size, max_size=image_size, image_mean=train_mean, image_std=train_std)
 custom_retinanet.model.to(device)
 params = [p for p in custom_retinanet.model.parameters() if p.requires_grad]
 optimiser = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
@@ -207,8 +212,8 @@ def main():
         if final_epoch_reached + 1 > warmup_epochs:
             early_stopping(epoch_val_loss[0], custom_retinanet.model, epoch, optimiser, save_path)
 
-        Utils.plot_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
-                          save_path)
+        Utils.plot_losses_retinanet(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
+                                    save_path)
         if early_stopping.early_stop:
             print('Patience reached, stopping early.')
             break
@@ -221,6 +226,7 @@ def main():
     custom_retinanet.model.load_state_dict(torch.load(join(save_path, 'model_best.pth'),
                                                       weights_only=True)['model_state_dict'])
     custom_retinanet.model.eval()
+    val_start = datetime.now()
     with torch.no_grad():
         counter = 0
         for images, targets in val_loader:
@@ -231,6 +237,7 @@ def main():
             Utils.plot_validation_results(detections, images, 0, 1, counter, save_path)
 
             counter += batch_size
+    inference_time = datetime.now() - val_start
 
     ####################################################################################################################
     # Save extra parameters to file.
@@ -238,10 +245,12 @@ def main():
     script_end = datetime.now()
     run_time = script_end - script_start
     with open(join(save_path, 'training_parameters.txt'), 'a') as save_file:
-        save_file.write(f'\n\nFinal Epoch Reached: {final_epoch_reached}\n'
+        save_file.write(f'\n\nFinal Epoch Reached: {final_epoch_reached + 1}\n'
                         f'Best Epoch: {early_stopping.best_epoch + 1}\n'
                         f"End time: {script_end.strftime('%Y-%m-%d  %H:%M:%S')}\n"
-                        f'Total run time: {run_time}')
+                        f'Total run time: {run_time}\n'
+                        f'Validation Inference Time Total: {inference_time}\n'
+                        f'Validation Inference Time Per Image: {inference_time / val_dataset.__len__()}')
 
     print('Training completed.\n'
           f'Best Epoch: {early_stopping.best_epoch + 1}.\n'

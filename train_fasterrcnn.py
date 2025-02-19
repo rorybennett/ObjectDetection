@@ -7,6 +7,7 @@ from torch import optim
 from torch.nn.utils import clip_grad_norm_
 
 import Datasets
+import DetectionModels
 from Datasets.ProstateBladderDataset import ProstateBladderDataset as PBD
 from DetectionModels.CustomFasterRCNN import CustomFasterRCNN
 from EarlyStopping.EarlyStopping import EarlyStopping
@@ -71,8 +72,7 @@ train_mean, train_std = PBD(images_root=train_images_path, labels_root=train_lab
                             train_mean=0, train_std=0, image_size=(0, 0)).get_mean_and_std()
 train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_fasterrcnn,
                     optional_transforms=train_transforms, oversampling_factor=oversampling_factor,
-                    image_size=image_size,
-                    train_mean=train_mean, train_std=train_std)
+                    image_size=image_size, train_mean=train_mean, train_std=train_std)
 val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, model_type=Datasets.model_fasterrcnn,
                   image_size=image_size, train_mean=train_mean, train_std=train_std)
 # If you want to validate the dataset transforms visually, you can do it here.
@@ -91,8 +91,13 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shu
 ########################################################################################################################
 # Set up model, optimiser, and learning rate scheduler (FasterRCNN).
 ########################################################################################################################
+train_mean = [train_mean] * 3
+train_std = [train_std] * 3
 print(f'Loading FasterRCNN model {backbone_type}...', end=' ')
-custom_fasterrcnn = CustomFasterRCNN(num_classes=num_classes)
+custom_fasterrcnn = CustomFasterRCNN(num_classes=num_classes,
+                                     backbone_type=DetectionModels.fasterrcnn_backbones[backbone_type],
+                                     min_size=image_size, max_size=image_size, image_mean=train_mean,
+                                     image_std=train_std)
 custom_fasterrcnn.model.to(device)
 params = [p for p in custom_fasterrcnn.model.parameters() if p.requires_grad]
 optimiser = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
@@ -134,7 +139,7 @@ def main():
         # Training step within epoch.
         ################################################################################################################
         custom_fasterrcnn.model.train()
-        epoch_train_loss = [0, 0, 0]
+        epoch_train_loss = [0, 0, 0, 0, 0]
         for images, targets in train_loader:
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
@@ -162,6 +167,8 @@ def main():
             epoch_train_loss[0] += losses.item()
             epoch_train_loss[1] += cls_loss.item()
             epoch_train_loss[2] += bbox_loss.item()
+            epoch_train_loss[3] += objectness_loss.item()
+            epoch_train_loss[4] += rpn_box_loss.item()
         # Step schedular once per epoch.
         lr_schedular.step()
         # Average epoch loss per image for all images.
@@ -173,7 +180,7 @@ def main():
         # Validation step within epoch.
         ################################################################################################################
         custom_fasterrcnn.model.eval()
-        epoch_val_loss = [0, 0, 0]
+        epoch_val_loss = [0, 0, 0, 0, 0]
         # No gradient calculations.
         with torch.no_grad():
             for images, targets in val_loader:
@@ -192,6 +199,8 @@ def main():
                 epoch_val_loss[0] += losses.item()
                 epoch_val_loss[1] += cls_loss.item()
                 epoch_val_loss[2] += bbox_loss.item()
+                epoch_val_loss[3] += objectness_loss.item()
+                epoch_val_loss[4] += rpn_box_loss.item()
 
             # Average epoch loss per image for all images.
             epoch_val_loss = [loss / len(val_loader) for loss in epoch_val_loss]
@@ -204,7 +213,7 @@ def main():
         print(f"\t{time_now}  -  Epoch {epoch + 1}/{total_epochs}, "
               f"Train Loss: {training_losses[-1][0]:0.3f}, "
               f"Val Loss: {val_losses[-1][0]:0.3f}, "
-              f"Learning Rate: {lr_schedular.get_last_lr()[0]:0.6f},", end=' ', flush=True)
+              f"Learning Rate: {lr_schedular.get_last_lr()[0]:0.3f},", end=' ', flush=True)
 
         ################################################################################################################
         # Check for early stopping. If patience reached, model is saved and final plots are made.
@@ -213,8 +222,8 @@ def main():
         if final_epoch_reached + 1 > warmup_epochs:
             early_stopping(epoch_val_loss[0], custom_fasterrcnn.model, epoch, optimiser, save_path)
 
-        Utils.plot_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
-                          save_path)
+        Utils.plot_losses_fasterrcnn(early_stopping.best_epoch + 1, training_losses, val_losses,
+                                     training_learning_rates, save_path)
         if early_stopping.early_stop:
             print('Patience reached, stopping early.')
             break
@@ -227,6 +236,7 @@ def main():
     custom_fasterrcnn.model.load_state_dict(
         torch.load(join(save_path, 'model_best.pth'), weights_only=True)['model_state_dict'])
     custom_fasterrcnn.model.eval()
+    val_start = datetime.now()
     with torch.no_grad():
         counter = 0
         for images, targets in val_loader:
@@ -237,17 +247,19 @@ def main():
             Utils.plot_validation_results(detections, images, 1, 1, counter, save_path)
 
             counter += batch_size
-
+    inference_time = datetime.now() - val_start
     ####################################################################################################################
     # Save extra parameters to file.
     ####################################################################################################################
     script_end = datetime.now()
     run_time = script_end - script_start
     with open(join(save_path, 'training_parameters.txt'), 'a') as save_file:
-        save_file.write(f'Final Epoch Reached: {final_epoch_reached}\n'
+        save_file.write(f'Final Epoch Reached: {final_epoch_reached + 1}\n'
                         f'Best Epoch: {early_stopping.best_epoch + 1}\n'
                         f"End time: {script_end.strftime('%Y-%m-%d  %H:%M:%S')}\n"
-                        f'Total run time: {run_time}')
+                        f'Total run time: {run_time}\n'
+                        f'Validation Inference Time Total: {inference_time}\n'
+                        f'Validation Inference Time Per Image: {inference_time / val_dataset.__len__()}')
 
     print('Training completed.\n'
           f'Best Epoch: {early_stopping.best_epoch + 1}.\n'
