@@ -66,13 +66,10 @@ save_latest = args.save_latest  # Save latest model as well as the best model.pt
 train_transforms = Transformers.get_training_transforms()
 
 train_mean, train_std = PBD(images_root=train_images_path, labels_root=train_labels_path,
-                            model_type=Datasets.model_retinanet,
-                            train_mean=0, train_std=0, image_size=(0, 0)).get_mean_and_std()
+                            model_type=Datasets.model_retinanet).get_mean_and_std()
 train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_retinanet,
-                    optional_transforms=train_transforms, oversampling_factor=oversampling_factor,
-                    image_size=image_size, train_mean=train_mean, train_std=train_std)
-val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, model_type=Datasets.model_retinanet,
-                  image_size=image_size, train_mean=train_mean, train_std=train_std)
+                    optional_transforms=train_transforms, oversampling_factor=oversampling_factor)
+val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, model_type=Datasets.model_retinanet)
 # If you want to validate the dataset transforms visually, you can do it here.
 # for i in range(len(train_dataset)):
 #     train_dataset.display_transforms(i)

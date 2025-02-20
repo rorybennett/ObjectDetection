@@ -19,7 +19,7 @@ from . import model_fasterrcnn, model_retinanet
 
 
 class ProstateBladderDataset(torch.utils.data.Dataset):
-    def __init__(self, images_root, labels_root, train_mean, train_std, image_size, label_names=None,
+    def __init__(self, images_root, labels_root, label_names=None,
                  optional_transforms=None, oversampling_factor=1, model_type=None, verbose=False):
         """
         Initialise the ProstateBladderDataset class. Set the images' and labels' root directories, the transforms
@@ -29,9 +29,6 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
 
         :param images_root: Directory containing images.
         :param labels_root: Directory containing labels.
-        :param train_mean: Mean of the training set, used in normalising the training and validation data.
-        :param train_std: Standard deviation of the training set.
-        :param image_size: Final size of image before being given to the model.
         :param label_names: List of names for associated labels.
         :param optional_transforms: Transformers to be used on this dataset.
         :param oversampling_factor: Increase dataset size by this amount (oversampling).
@@ -43,9 +40,6 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
         self.images_root = images_root
         self.labels_root = labels_root
         self.label_names = label_names
-        self.image_size = image_size
-        self.train_mean = train_mean
-        self.train_std = train_std
         self.optional_transforms = optional_transforms
         self.oversampling_factor = oversampling_factor
         self.model_type = model_type
@@ -66,9 +60,6 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
                   f'\tLabels root: {self.labels_root}.\n'
                   f'\tTotal Images: {len(self.imgs)}.\n'
                   f'\tTotal Labels: {len(self.labels)}.\n'
-                  f'\tImage Size: {self.image_size}.\n'
-                  f'\tTraining Dataset Mean: {self.train_mean}.\n'
-                  f'\tTraining Dataset Standard Deviation: {self.train_std}.\n'
                   f'\tOversampling count: {self.oversampling_factor}.')
 
         self.validate_dataset()
@@ -255,8 +246,6 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
                     img, target = self.optional_transforms(img, target)
             # Apply required transforms (slightly altered from __getitem() as ax.imshow(cmap='gray') has limitations.
             required_transforms = v2.Compose([
-                v2.Resize(self.image_size),
-                v2.Normalize([self.train_mean], [self.train_std]),
                 v2.Grayscale(num_output_channels=1)
             ])
             img, target = required_transforms(img, target)

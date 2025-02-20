@@ -66,11 +66,13 @@ python train_fasterrcnn.py \
   -tlp="./ObjectDetectionDatasets/$training_labels_path" \
   -vip="./ObjectDetectionDatasets/$val_images_path" \
   -vlp="./ObjectDetectionDatasets/$val_labels_path" \
-  -sp="/data/scratch/exx851/FasterRCNN/$saving_path" \
+  -sp="/data/scratch/exx851/FasterRCNN/mobilenet_v3_large_320_fpn/$saving_path" \
   -e=1000 \
   -lres=1000 \
   -nc=2 \
   -bs=32 \
   -of=8 \
   -p=100 \
-  -bbt='fasterrcnn_resnet50_fpn_v2'
+  -we=30 \
+  --learning_rate=0.005 \
+  -bbt='mobilenet_v3_large_320_fpn'

@@ -66,11 +66,12 @@ python train_retinanet.py \
   -tlp="./ObjectDetectionDatasets/$training_labels_path" \
   -vip="./ObjectDetectionDatasets/$val_images_path" \
   -vlp="./ObjectDetectionDatasets/$val_labels_path" \
-  -sp="/data/scratch/exx851/RetinaNet/$saving_path" \
+  -sp="/data/scratch/exx851/RetinaNet/resnet50_fpn_v2/$saving_path" \
   -e=1000 \
   -lres=1000 \
   -nc=1 \
   -bs=32 \
   -of=8 \
   -p=100 \
+  -we=30 \
   -bbt="retinanet_resnet50_fpn_v2"
