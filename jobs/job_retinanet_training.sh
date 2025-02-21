@@ -61,12 +61,12 @@ val_images_path=${inputs[$((5 * SGE_TASK_ID - 3))]}
 val_labels_path=${inputs[$((5 * SGE_TASK_ID - 2))]}
 saving_path=${inputs[$((5 * SGE_TASK_ID - 1))]}
 
-python train_retinanet.py \
+python ./RetinaNet/train_retinanet.py \
   -tip="./ObjectDetectionDatasets/$training_images_path" \
   -tlp="./ObjectDetectionDatasets/$training_labels_path" \
   -vip="./ObjectDetectionDatasets/$val_images_path" \
   -vlp="./ObjectDetectionDatasets/$val_labels_path" \
-  -sp="/data/scratch/exx851/RetinaNet/resnet50_fpn_v2/$saving_path" \
+  -sp="/data/scratch/exx851/RetinaNet/mobilenet_v2/$saving_path" \
   -e=1000 \
   -lres=1000 \
   -nc=1 \
@@ -74,4 +74,4 @@ python train_retinanet.py \
   -of=8 \
   -p=100 \
   -we=30 \
-  -bbt="retinanet_resnet50_fpn_v2"
+  -bbt="mobilenet_v2"

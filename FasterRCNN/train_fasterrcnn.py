@@ -7,12 +7,12 @@ from torch import optim
 from torch.nn.utils import clip_grad_norm_
 
 import Datasets
-import DetectionModels
 from Datasets.ProstateBladderDataset import ProstateBladderDataset as PBD
-from DetectionModels.CustomRetinaNet import CustomRetinaNet
 from EarlyStopping.EarlyStopping import EarlyStopping
+from FasterRCNN.CustomFasterRCNN import CustomFasterRCNN
 from Transformers import Transformers
 from Utils import CustomArgParser, Utils
+from . import backbones
 
 ########################################################################################################################
 # Track run time of script.
@@ -56,6 +56,8 @@ momentum = args.momentum  # Optimiser momentum.
 weight_decay = args.weight_decay  # Optimiser weight decay.
 box_weight = args.box_weight  # Weight applied to box loss.
 cls_weight = args.cls_weight  # Weight applied to classification loss.
+objectness_weight = args.objectness_weight  # Weight applied to objectness loss.
+rpn_weight = args.rpn_box_weight  # Weight applied to rpn box loss.
 oversampling_factor = args.oversampling_factor  # Oversampling factor.
 backbone_type = args.backbone_type  # Type of backbone model should use.
 save_latest = args.save_latest  # Save latest model as well as the best model.pth.
@@ -66,10 +68,10 @@ save_latest = args.save_latest  # Save latest model as well as the best model.pt
 train_transforms = Transformers.get_training_transforms()
 
 train_mean, train_std = PBD(images_root=train_images_path, labels_root=train_labels_path,
-                            model_type=Datasets.model_retinanet).get_mean_and_std()
-train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_retinanet,
+                            model_type=Datasets.model_fasterrcnn).get_mean_and_std()
+train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_fasterrcnn,
                     optional_transforms=train_transforms, oversampling_factor=oversampling_factor)
-val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, model_type=Datasets.model_retinanet)
+val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, model_type=Datasets.model_fasterrcnn)
 # If you want to validate the dataset transforms visually, you can do it here.
 # for i in range(len(train_dataset)):
 #     train_dataset.display_transforms(i)
@@ -84,16 +86,16 @@ val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shu
                                          collate_fn=lambda x: tuple(zip(*x)))
 
 ########################################################################################################################
-# Set up model, optimiser, and learning rate scheduler (RetinaNet).
+# Set up model, optimiser, and learning rate scheduler (FasterRCNN).
 ########################################################################################################################
 train_mean = [train_mean] * 3
 train_std = [train_std] * 3
-print(f'Loading RetinaNet model {backbone_type}...', end=' ')
-custom_retinanet = CustomRetinaNet(num_classes=num_classes,
-                                   backbone_type=DetectionModels.retinanet_backbones[backbone_type],
-                                   min_size=image_size, max_size=image_size, image_mean=train_mean, image_std=train_std)
-custom_retinanet.model.to(device)
-params = [p for p in custom_retinanet.model.parameters() if p.requires_grad]
+print(f'Loading FasterRCNN model {backbone_type}...', end=' ')
+custom_fasterrcnn = CustomFasterRCNN(num_classes=num_classes, backbone_type=backbones[backbone_type],
+                                     min_size=image_size, max_size=image_size, image_mean=train_mean,
+                                     image_std=train_std)
+custom_fasterrcnn.model.to(device)
+params = [p for p in custom_fasterrcnn.model.parameters() if p.requires_grad]
 optimiser = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
 lr_schedular = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimiser, T_0=learning_restart, eta_min=0)
 print(f'Model loaded.')
@@ -132,20 +134,22 @@ def main():
         ################################################################################################################
         # Training step within epoch.
         ################################################################################################################
-        custom_retinanet.model.train()
-        epoch_train_loss = [0, 0, 0]
+        custom_fasterrcnn.model.train()
+        epoch_train_loss = [0, 0, 0, 0, 0]
         for images, targets in train_loader:
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
             # Zero the gradients.
             optimiser.zero_grad()
             # Forward pass.
-            loss_dict = custom_retinanet.forward(images, targets)
+            loss_dict = custom_fasterrcnn.forward(images, targets)
             # Extract each loss.
-            cls_loss = loss_dict['classification']
-            bbox_loss = loss_dict['bbox_regression']
+            cls_loss = loss_dict['loss_classifier']
+            bbox_loss = loss_dict['loss_box_reg']
+            objectness_loss = loss_dict['loss_objectness']
+            rpn_box_loss = loss_dict['loss_rpn_box_reg']
             # Calculate total loss, can apply weights here.
-            losses = cls_loss * cls_weight + bbox_loss * box_weight
+            losses = cls_loss * cls_weight + bbox_loss * box_weight + objectness_loss * objectness_weight + rpn_box_loss * rpn_weight
             # Check for NaNs or Infs.
             if torch.isnan(losses).any() or torch.isinf(losses).any():
                 print("Loss has NaNs or Infs, skipping this batch")
@@ -153,12 +157,14 @@ def main():
             # Calculate gradients.
             losses.backward()
             # Apply gradient clipping.
-            clip_grad_norm_(custom_retinanet.model.parameters(), 2)
+            clip_grad_norm_(custom_fasterrcnn.model.parameters(), 2)
             optimiser.step()
             # Epoch loss per batch.
             epoch_train_loss[0] += losses.item()
             epoch_train_loss[1] += cls_loss.item()
             epoch_train_loss[2] += bbox_loss.item()
+            epoch_train_loss[3] += objectness_loss.item()
+            epoch_train_loss[4] += rpn_box_loss.item()
         # Step schedular once per epoch.
         lr_schedular.step()
         # Average epoch loss per image for all images.
@@ -169,25 +175,28 @@ def main():
         ################################################################################################################
         # Validation step within epoch.
         ################################################################################################################
-        custom_retinanet.model.eval()
-        epoch_val_loss = [0, 0, 0]
+        custom_fasterrcnn.model.eval()
+        epoch_val_loss = [0, 0, 0, 0, 0]
         # No gradient calculations.
         with torch.no_grad():
             for images, targets in val_loader:
                 images = list(image.to(device) for image in images)
                 targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
                 # Forward pass.
-                loss_dict, _ = custom_retinanet.forward(images, targets)
-
+                loss_dict, _ = custom_fasterrcnn.forward(images, targets)
                 # Extract each loss.
-                cls_loss = loss_dict['classification']
-                bbox_loss = loss_dict['bbox_regression']
+                cls_loss = loss_dict['loss_classifier']
+                bbox_loss = loss_dict['loss_box_reg']
+                objectness_loss = loss_dict['loss_objectness']
+                rpn_box_loss = loss_dict['loss_rpn_box_reg']
                 # Calculate total loss.
-                losses = cls_loss * cls_weight + bbox_loss * box_weight
+                losses = cls_loss * cls_weight + bbox_loss * box_weight + objectness_loss * objectness_weight + rpn_box_loss * rpn_weight
                 # Epoch loss per batch.
                 epoch_val_loss[0] += losses.item()
                 epoch_val_loss[1] += cls_loss.item()
                 epoch_val_loss[2] += bbox_loss.item()
+                epoch_val_loss[3] += objectness_loss.item()
+                epoch_val_loss[4] += rpn_box_loss.item()
 
             # Average epoch loss per image for all images.
             epoch_val_loss = [loss / len(val_loader) for loss in epoch_val_loss]
@@ -207,10 +216,10 @@ def main():
         ################################################################################################################
         final_epoch_reached = epoch
         if final_epoch_reached + 1 > warmup_epochs:
-            early_stopping(epoch_val_loss[0], custom_retinanet.model, epoch, optimiser, save_path)
+            early_stopping(epoch_val_loss[0], custom_fasterrcnn.model, epoch, optimiser, save_path)
 
-        Utils.plot_losses_retinanet(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
-                                    save_path)
+        Utils.plot_losses_fasterrcnn(early_stopping.best_epoch + 1, training_losses, val_losses,
+                                     training_learning_rates, save_path)
         if early_stopping.early_stop:
             print('Patience reached, stopping early.')
             break
@@ -220,29 +229,28 @@ def main():
     ####################################################################################################################
     # On training complete, pass through validation images and plot them using best model (must be reloaded).
     ####################################################################################################################
-    custom_retinanet.model.load_state_dict(torch.load(join(save_path, 'model_best.pth'),
-                                                      weights_only=True)['model_state_dict'])
-    custom_retinanet.model.eval()
+    custom_fasterrcnn.model.load_state_dict(
+        torch.load(join(save_path, 'model_best.pth'), weights_only=True)['model_state_dict'])
+    custom_fasterrcnn.model.eval()
     val_start = datetime.now()
     with torch.no_grad():
         counter = 0
         for images, targets in val_loader:
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-            _, detections = custom_retinanet.forward(images, targets)
+            _, detections = custom_fasterrcnn.forward(images, targets)
 
-            Utils.plot_validation_results(detections, images, 0, 1, counter, save_path)
+            Utils.plot_validation_results(detections, images, 1, 1, counter, save_path)
 
             counter += batch_size
     inference_time = datetime.now() - val_start
-
     ####################################################################################################################
     # Save extra parameters to file.
     ####################################################################################################################
     script_end = datetime.now()
     run_time = script_end - script_start
     with open(join(save_path, 'training_parameters.txt'), 'a') as save_file:
-        save_file.write(f'\n\nFinal Epoch Reached: {final_epoch_reached + 1}\n'
+        save_file.write(f'Final Epoch Reached: {final_epoch_reached + 1}\n'
                         f'Best Epoch: {early_stopping.best_epoch + 1}\n'
                         f"End time: {script_end.strftime('%Y-%m-%d  %H:%M:%S')}\n"
                         f'Total run time: {run_time}\n'

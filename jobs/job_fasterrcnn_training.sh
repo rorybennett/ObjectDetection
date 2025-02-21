@@ -61,7 +61,7 @@ val_images_path=${inputs[$((5 * SGE_TASK_ID - 3))]}
 val_labels_path=${inputs[$((5 * SGE_TASK_ID - 2))]}
 saving_path=${inputs[$((5 * SGE_TASK_ID - 1))]}
 
-python train_fasterrcnn.py \
+python  ./FasterRCNN/train_fasterrcnn.py \
   -tip="./ObjectDetectionDatasets/$training_images_path" \
   -tlp="./ObjectDetectionDatasets/$training_labels_path" \
   -vip="./ObjectDetectionDatasets/$val_images_path" \
