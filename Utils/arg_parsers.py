@@ -130,9 +130,9 @@ class YOLOv1ArgParser(BaseArgParser):
         Set up and return the parser with additional arguments for YOLOv1 and YOLOv1_fast.
         """
         super().__init__()
-        self.parser.add_argument('-ys', '--yolo_s', type=float, default=7,
+        self.parser.add_argument('-ys', '--yolo_s', type=int, default=7,
                                  help='YOLOv1 grid size (SxS)')
-        self.parser.add_argument('-yb', '--yolo_b', type=float, default=2,
+        self.parser.add_argument('-yb', '--yolo_b', type=int, default=2,
                                  help='YOLOv1 bounding boxes per grid cell')
         self.parser.add_argument('-lw', '--loss_weight', type=float, default=5,
                                  help='YOLOv1 loss weight')
