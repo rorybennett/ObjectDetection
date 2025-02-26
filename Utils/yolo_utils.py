@@ -166,14 +166,16 @@ def convert_xyxy_to_yolov1(target, S=7, B=2, C=1):
         h_rel = height
 
         # Assign values to YOLOv1 label tensor
-        if yolo_v1_label[grid_y, grid_x, 4] == 0:  # First bounding box slot is free
-            yolo_v1_label[grid_y, grid_x, :5] = [x_rel, y_rel, w_rel, h_rel, 1]  # Confidence = 1
-        elif yolo_v1_label[grid_y, grid_x, 9] == 0:  # Second bounding box slot is free
-            yolo_v1_label[grid_y, grid_x, 5:10] = [x_rel, y_rel, w_rel, h_rel, 1]  # Confidence = 1
+        for b in range(B):
+            conf_index = b * 5 + 4  # Confidence score index in the tensor
+            if yolo_v1_label[grid_y, grid_x, conf_index] == 0:  # Check if this slot is empty
+                yolo_v1_label[grid_y, grid_x, b * 5: (b + 1) * 5] = [x_rel, y_rel, w_rel, h_rel, 1]
+                break  # Assign only one box per object
 
         # Assign class probabilities (One-Hot Encoding)
-        yolo_v1_label[grid_y, grid_x, B * 5:] = 0  # Reset class probabilities
-        yolo_v1_label[grid_y, grid_x, B * 5 + class_id] = 1
+        class_start_idx = B * 5  # After all bounding boxes
+        yolo_v1_label[grid_y, grid_x, class_start_idx:] = 0  # Reset class probabilities
+        yolo_v1_label[grid_y, grid_x, class_start_idx + class_id] = 1  # Set class
 
     return torch.tensor(yolo_v1_label, dtype=torch.float32)
 
