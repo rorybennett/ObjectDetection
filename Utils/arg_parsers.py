@@ -63,8 +63,6 @@ class BaseArgParser:
         ################################################################################################################
         # Dataset parameters
         ################################################################################################################
-        self.parser.add_argument('-is', '--image_size', type=int, default=600,
-                                 help='Scaled image size, applied to all images, aspect ratio maintained')
         self.parser.add_argument('-of', '--oversampling_factor', type=int, default=1,
                                  help='How much oversampling is desired (multiply the number of training images by this'
                                       ' factor, transforms are only applied to oversampled images)')
@@ -96,6 +94,8 @@ class FasterRCNNArgParser(BaseArgParser):
         Set up and return the parser with additional arguments for FasterRCNN.
         """
         super().__init__()
+        self.parser.add_argument('-is', '--image_size', type=int, default=600,
+                                 help='Scaled image size, applied to all images, aspect ratio maintained')
         self.parser.add_argument('-bbt', '--backbone_type', type=str,
                                  help='Model backbone (renet50_fpn_v2 seems to be the best)')
         self.parser.add_argument('-bw', '--box_weight', type=float, default=1,
@@ -114,6 +114,8 @@ class RetinaNetArgParser(BaseArgParser):
         Set up and return the parser with additional arguments for RetinaNet.
         """
         super().__init__()
+        self.parser.add_argument('-is', '--image_size', type=int, default=600,
+                                 help='Scaled image size, applied to all images, aspect ratio maintained')
         self.parser.add_argument('-bbt', '--backbone_type', type=str,
                                  help='Model backbone (renet50_fpn_v2 seems to be the best)')
         self.parser.add_argument('-bw', '--box_weight', type=float, default=1,
