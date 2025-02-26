@@ -5,13 +5,14 @@ from os.path import join
 import torch
 from torch import optim
 from torch.nn.utils import clip_grad_norm_
+from torch.utils.data import DataLoader
 
-import Datasets
-from Datasets.ProstateBladderDataset import ProstateBladderDataset as PBD
+from Datasets.fasterrcnn_dataset import ProstateBladderDataset as PBD
 from EarlyStopping.EarlyStopping import EarlyStopping
 from FasterRCNN.CustomFasterRCNN import CustomFasterRCNN
 from Transformers import Transformers
-from Utils import CustomArgParser, Utils
+from Utils import general_utils, fasterrcnn_utils
+from Utils.arg_parsers import RetinaNetArgParser
 from . import backbones
 
 ########################################################################################################################
@@ -34,8 +35,8 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 ########################################################################################################################
 # Fetch parser and set variables from parser args.
 ########################################################################################################################
-CAP = CustomArgParser.CustomArgParser()
-args = CAP.parser.parse_args()
+arg_parser = RetinaNetArgParser()
+args = arg_parser.parse_args()
 train_images_path = args.train_images_path  # Path to training images directory.
 train_labels_path = args.train_labels_path  # Path to training labels directory.
 val_images_path = args.val_images_path  # Path to validation images directory.
@@ -65,13 +66,12 @@ save_latest = args.save_latest  # Save latest model as well as the best model.pt
 ########################################################################################################################
 # Transformers and datasets used by models.
 ########################################################################################################################
-train_transforms = Transformers.get_training_transforms()
+train_transforms = Transformers.get_retinanet_transforms()
 
-train_mean, train_std = PBD(images_root=train_images_path, labels_root=train_labels_path,
-                            model_type=Datasets.model_fasterrcnn).get_mean_and_std()
-train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, model_type=Datasets.model_fasterrcnn,
-                    optional_transforms=train_transforms, oversampling_factor=oversampling_factor)
-val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, model_type=Datasets.model_fasterrcnn)
+train_mean, train_std = PBD(images_root=train_images_path, labels_root=train_labels_path).get_mean_and_std()
+train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, optional_transforms=train_transforms,
+                    oversampling_factor=oversampling_factor)
+val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path)
 # If you want to validate the dataset transforms visually, you can do it here.
 # for i in range(len(train_dataset)):
 #     train_dataset.display_transforms(i)
@@ -80,10 +80,8 @@ val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, mode
 ########################################################################################################################
 # Set up dataloaders.
 ########################################################################################################################
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
-                                           collate_fn=lambda x: tuple(zip(*x)))
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False,
-                                         collate_fn=lambda x: tuple(zip(*x)))
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=lambda x: tuple(zip(*x)))
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=lambda x: tuple(zip(*x)))
 
 ########################################################################################################################
 # Set up model, optimiser, and learning rate scheduler (FasterRCNN).
@@ -103,10 +101,11 @@ print(f'Model loaded.')
 ########################################################################################################################
 # Save training parameters to file and display to screen.
 ########################################################################################################################
-CAP.save_args(save_path, script_start=script_start, seed=seed, device=device, device_name=Utils.get_device_name(),
-              train_mean=train_mean, train_std=train_std, train_dataset_len=train_dataset.__len__(),
-              val_dataset_len=val_dataset.__len__(), transformer_count=len(train_transforms.transforms),
-              optimiser_name=optimiser.__class__.__name__, lr_schedular_name=lr_schedular.__class__.__name__)
+arg_parser.save_args(save_path, args, script_start=script_start, seed=seed, device=device,
+                     device_name=general_utils.get_device_name(), train_mean=train_mean, train_std=train_std,
+                     train_dataset_len=train_dataset.__len__(), val_dataset_len=val_dataset.__len__(),
+                     transformer_count=len(train_transforms.transforms), optimiser_name=optimiser.__class__.__name__,
+                     lr_schedular_name=lr_schedular.__class__.__name__)
 
 print('=====================================================================================================\n'
       f'Start time: {script_start}\n'
@@ -203,7 +202,7 @@ def main():
             val_losses.append(epoch_val_loss)
 
         ################################################################################################################
-        # Display training and validation losses (combined loss - training is weighted, validation is not).
+        # Display training and validation losses (combined loss - weighted).
         ################################################################################################################
         time_now = datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
         print(f"\t{time_now}  -  Epoch {epoch + 1}/{total_epochs}, "
@@ -218,7 +217,7 @@ def main():
         if final_epoch_reached + 1 > warmup_epochs:
             early_stopping(epoch_val_loss[0], custom_fasterrcnn.model, epoch, optimiser, save_path)
 
-        Utils.plot_losses_fasterrcnn(early_stopping.best_epoch + 1, training_losses, val_losses,
+        fasterrcnn_utils.plot_losses(early_stopping.best_epoch + 1, training_losses, val_losses,
                                      training_learning_rates, save_path)
         if early_stopping.early_stop:
             print('Patience reached, stopping early.')
@@ -240,7 +239,7 @@ def main():
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
             _, detections = custom_fasterrcnn.forward(images, targets)
 
-            Utils.plot_validation_results(detections, images, 1, 1, counter, save_path)
+            general_utils.plot_validation_results(detections, images, 1, 1, counter, save_path)
 
             counter += batch_size
     inference_time = datetime.now() - val_start

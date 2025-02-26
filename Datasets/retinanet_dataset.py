@@ -1,7 +1,8 @@
 """
-Custom dataset class for the prostate and bladder detection. A single prostate bounding box and/or a single bladder
-bounding box are present for each image. The dataset labels should be organised in the YOLO format. Images
-will be stored in the root/images directory and labels in the root/labels directory.
+Custom dataset class for the prostate and bladder detection. This is specifically for the RetinaNet model.
+A single prostate bounding box and/or a single bladder bounding box are present for each image.
+The dataset labels should be organised in the YOLO format. Images will be stored in the root/images directory
+and labels in the root/labels directory.
 
 todo Move display of result to this class perhaps, allowing for correct labelling?
 """
@@ -15,24 +16,19 @@ from natsort import natsorted
 from torchvision import tv_tensors
 from torchvision.transforms import v2
 
-from . import model_fasterrcnn, model_retinanet
-
 
 class ProstateBladderDataset(torch.utils.data.Dataset):
-    def __init__(self, images_root, labels_root, label_names=None,
-                 optional_transforms=None, oversampling_factor=1, model_type=None, verbose=False):
+    def __init__(self, images_root, labels_root, label_names=None, optional_transforms=None, oversampling_factor=1,
+                 verbose=False):
         """
         Initialise the ProstateBladderDataset class. Set the images' and labels' root directories, the transforms
-        that are to be used when __getitem__() is called, the type of model that will be accessing this dataset class,
-        and perform minor dataset validation. The model_type parameter is necessary as different models follow
-        different conventions.
+        that are to be used when __getitem__() is called, and perform minor dataset validation.
 
         :param images_root: Directory containing images.
         :param labels_root: Directory containing labels.
         :param label_names: List of names for associated labels.
         :param optional_transforms: Transformers to be used on this dataset.
         :param oversampling_factor: Increase dataset size by this amount (oversampling).
-        :param model_type: String representation of the model type this dataset is used with.
         :param verbose: Print details to screen.
         """
 
@@ -42,15 +38,10 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
         self.label_names = label_names
         self.optional_transforms = optional_transforms
         self.oversampling_factor = oversampling_factor
-        self.model_type = model_type
         self.imgs = list(natsorted(os.listdir(self.images_root)))
         self.labels = list(natsorted(os.listdir(self.labels_root)))
-        # Transforms that are required (resizing and normalising). YOLO does not have the option of single channel
-        # greyscale (at the time of putting this together), so 3 channel greyscale is used for consistency here. It
-        # resizing and normalisation take place in the RetinaNet and FasterRCNN packages by default.
+        # Transforms that are required (making sure it is 3-channel greyscale)
         self.required_transforms = v2.Compose([
-            # v2.Resize(self.image_size),
-            # v2.Normalize([self.train_mean], [self.train_std]),
             v2.Grayscale(num_output_channels=3)
         ])
 
@@ -140,34 +131,15 @@ class ProstateBladderDataset(torch.utils.data.Dataset):
 
                 boxes.append([x_min, y_min, x_max, y_max])
 
-                if self.model_type == model_fasterrcnn:
-                    # Add 1 since 0 is always background for fasterrcnn.
-                    labels.append(class_id + 1)
-                elif self.model_type == model_retinanet:
-                    labels.append(class_id)
+                labels.append(class_id)
 
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
         labels = torch.as_tensor(labels, dtype=torch.int64)
 
-        # Create targets dict, depends on model type.
-        if self.model_type == model_fasterrcnn:
-            image_id = torch.tensor([idx])
-            area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-            iscrowd = torch.zeros((len(boxes),), dtype=torch.int64)
-            target = {
-                "boxes": tv_tensors.BoundingBoxes(boxes, format="XYXY", canvas_size=(img_height, img_width)),
-                "labels": labels,
-                "image_id": image_id,
-                "area": area,
-                "iscrowd": iscrowd
-            }
-        elif self.model_type == model_retinanet:
-            target = {
-                "boxes": tv_tensors.BoundingBoxes(boxes, format="XYXY", canvas_size=(img_height, img_width)),
-                "labels": labels
-            }
-        else:
-            assert False, 'Unmatched model type, ensure model type matches one of the given types.'
+        target = {
+            "boxes": tv_tensors.BoundingBoxes(boxes, format="XYXY", canvas_size=(img_height, img_width)),
+            "labels": labels
+        }
 
         return target
 

@@ -1,8 +1,6 @@
 """
-Dataset classes to be used by the various models.
-
-ProstateBladderDataset.py can be used as a starting point.
+All dataset classes used for object detection:
+    1. RetinaNet
+    2. FasterRCNN (minor changes to RetinaNet)
+    3. YOLO (Before Ultralytics, manual dataset classes are needed).
 """
-model_fasterrcnn = 'fasterrcnn_resnet50_fpn_v2'
-model_retinanet = 'retinanet_resnet50_fpn_v2'
-
