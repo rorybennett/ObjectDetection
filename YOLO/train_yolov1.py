@@ -68,8 +68,10 @@ train_transforms = Transformers.get_yolov1_transforms()
 
 train_mean, train_std = PBD(images_root=train_images_path, labels_root=train_labels_path).get_mean_and_std()
 train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, transforms=train_transforms,
-                    oversampling_factor=oversampling_factor, train_mean=train_mean, train_std=train_std)
-val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, train_mean=train_mean, train_std=train_std)
+                    oversampling_factor=oversampling_factor, train_mean=train_mean, train_std=train_std, S=S, B=B,
+                    C=num_classes)
+val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, train_mean=train_mean, train_std=train_std,
+                  S=S, B=B, C=num_classes)
 # If you want to validate the dataset transforms visually, you can do it here.
 # for i in range(len(val_dataset)):
 #     val_dataset.display_transforms(i)

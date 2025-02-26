@@ -171,9 +171,10 @@ class YOLOv1Fast(nn.Module):
 
         return x
 
+
 ########################################################################################################################
 # Model tests.
 ########################################################################################################################
-# model = YOLOv1Fast(S=7, B=2, C=2)
-# test_input = torch.randn(1, 3, 448, 448)
-# test_output = model(test_input)
+model = YOLOv1Fast(S=7, B=1, C=1)
+test_input = torch.randn(1, 3, 448, 448)
+test_output = model(test_input)

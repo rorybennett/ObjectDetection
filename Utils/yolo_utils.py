@@ -172,8 +172,8 @@ def convert_xyxy_to_yolov1(target, S=7, B=2, C=1):
             yolo_v1_label[grid_y, grid_x, 5:10] = [x_rel, y_rel, w_rel, h_rel, 1]  # Confidence = 1
 
         # Assign class probabilities (One-Hot Encoding)
-        yolo_v1_label[grid_y, grid_x, 10:] = 0  # Reset class probabilities
-        yolo_v1_label[grid_y, grid_x, 10 + class_id] = 1
+        yolo_v1_label[grid_y, grid_x, B * 5:] = 0  # Reset class probabilities
+        yolo_v1_label[grid_y, grid_x, B * 5 + class_id] = 1
 
     return torch.tensor(yolo_v1_label, dtype=torch.float32)
 
