@@ -93,7 +93,7 @@ class YOLOv1(nn.Module):
         # Fully Connected Layers
         self.fc_layers = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(1024 * S * S, 4096),
+            nn.Linear(1024 * 7 * 7, 4096),
             nn.LeakyReLU(0.1),
             nn.Dropout(0.5),
             nn.Linear(4096, S * S * (B * 5 + C)),
@@ -125,26 +125,32 @@ class YOLOv1Fast(nn.Module):
         self.conv_layers = nn.Sequential(
             # First Conv Block
             nn.Conv2d(3, 16, kernel_size=7, stride=1, padding=3), nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Second Conv Block
             nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Third Conv Block
             nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Fourth Conv Block
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Fifth Conv Block
             nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Sixth Conv Block
             nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Final Convolutions (Keep Feature Map 7x7)
@@ -156,17 +162,15 @@ class YOLOv1Fast(nn.Module):
         # Fully Connected Layers
         self.fc_layers = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(1024 * S * S, 4096),
+            nn.Linear(1024 * 7 * 7, 2048),
             nn.LeakyReLU(0.1),
             nn.Dropout(0.5),
-            nn.Linear(4096, S * S * (B * 5 + C)),
+            nn.Linear(2048, S * S * (B * 5 + C)),
         )
 
     def forward(self, x):
         x = self.conv_layers(x)
-
         x = self.fc_layers(x)
-
         x = x.view(-1, self.S, self.S, self.B * 5 + self.C)
 
         return x
@@ -175,6 +179,6 @@ class YOLOv1Fast(nn.Module):
 ########################################################################################################################
 # Model tests.
 ########################################################################################################################
-model = YOLOv1Fast(S=7, B=1, C=1)
+model = YOLOv1(S=14, B=2, C=1)
 test_input = torch.randn(1, 3, 448, 448)
 test_output = model(test_input)

@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import torch
 from torch import nn
 
@@ -32,9 +34,9 @@ class YOLOv1Loss(nn.Module):
         """
         batch_size = predictions.shape[0]
 
-        # Reshape tensors for clarity
-        predictions = predictions.view(batch_size, self.S, self.S, self.B * 5 + self.C)
-        target = target.view(batch_size, self.S, self.S, self.B * 5 + self.C)
+        # # Reshape tensors for clarity
+        # predictions = predictions.view(batch_size, self.S, self.S, self.B * 5 + self.C)
+        # target = target.view(batch_size, self.S, self.S, self.B * 5 + self.C)
 
         # Split into components
         pred_boxes = predictions[..., :self.B * 5].reshape(batch_size, self.S, self.S, self.B, 5)  # (x, y, w, h, conf)
@@ -57,11 +59,12 @@ class YOLOv1Loss(nn.Module):
         target_best_boxes = target_boxes[best_box_mask]
 
         # Localization Loss (Only for object cells)
-        xy_loss = self.mse(pred_best_boxes[..., :2], target_best_boxes[..., :2])  # (x, y)
+        xy_loss = self.mse(pred_best_boxes[..., :2],
+                           target_best_boxes[..., :2])  # (x, y)
 
         wh_loss = self.mse(
-            torch.sqrt(torch.clamp(pred_best_boxes[..., 2:4], min=0) + 1e-6),
-            torch.sqrt(torch.clamp(target_best_boxes[..., 2:4], min=0) + 1e-6)
+            torch.sqrt(torch.exp(pred_best_boxes[..., 2:4])),
+            torch.sqrt(torch.exp(target_best_boxes[..., 2:4]))
         )
 
         # Confidence Loss

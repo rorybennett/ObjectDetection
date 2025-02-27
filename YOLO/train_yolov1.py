@@ -73,8 +73,8 @@ train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path
 val_dataset = PBD(images_root=val_images_path, labels_root=val_labels_path, train_mean=train_mean, train_std=train_std,
                   S=S, B=B, C=num_classes)
 # If you want to validate the dataset transforms visually, you can do it here.
-# for i in range(len(val_dataset)):
-#     val_dataset.display_transforms(i)
+# for i in range(len(train_dataset)):
+#     train_dataset.display_transforms(i)
 #
 # exit()
 ########################################################################################################################

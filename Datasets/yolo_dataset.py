@@ -140,6 +140,8 @@ class ProstateBladderDataset(Dataset):
         if self.verbose:
             print(f'Dataset validation passed.')
 
+        return
+
     def display_transforms(self, idx):
         """
         Visualizes the original and transformed image with bounding boxes.

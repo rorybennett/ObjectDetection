@@ -38,13 +38,12 @@ def draw_yolo_boxes_on_axis(B, S, ax, boxes, title, box_format):
         for i in range(S):
             for j in range(S):
                 for b in range(B):
-                    conf_idx = 4 + b * 5  # Confidence index
-                    conf = boxes[i, j, conf_idx]  # Object confidence
+                    conf = boxes[i, j, 4 + b * 5]  # Object confidence
                     if conf > 0:
                         # Extract (x, y, w, h)
                         x, y, w, h = boxes[i, j, b * 5: b * 5 + 4]
 
-                        # Convert relative to absolute coordinates
+                        # Convert relative (to cell) to absolute (image) coordinates
                         cell_size = 448 / S
                         abs_x = (j + x) * cell_size
                         abs_y = (i + y) * cell_size
