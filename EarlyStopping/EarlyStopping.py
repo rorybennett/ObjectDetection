@@ -48,6 +48,7 @@ class EarlyStopping:
             self.best_score = score
             self.best_epoch = epoch
             self.save_checkpoint(val_loss, model, epoch, optimiser, save_path, 'model_best.pth')
+            self.save_checkpoint(val_loss, model, epoch, optimiser, save_path, 'model_latest.pth')
             self.counter = 0
 
     def save_checkpoint(self, val_loss, model, epoch, optimiser, save_path, model_name: str):
