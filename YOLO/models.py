@@ -29,65 +29,65 @@ class YOLOv1(nn.Module):
         self.C = C
 
         # CNN Backbone
-        self.conv_layers = nn.Sequential(
+        self.darknet_layers = nn.Sequential(
             # First convolutional layer (based on paper diagram).
-            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=1),
+            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(kernel_size=2, stride=2),
             # Second convolutional layer.
-            nn.Conv2d(64, 192, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(64, 192, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(kernel_size=2, stride=2),
             # Third batch of convolutional layers.
-            nn.Conv2d(192, 128, kernel_size=1),
+            nn.Conv2d(192, 128, kernel_size=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(256, 256, kernel_size=1),
+            nn.Conv2d(256, 256, kernel_size=1, stride=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(kernel_size=2, stride=2),
             # Fourth batch of convolutional layers (repeating the first 2 4 times).
-            nn.Conv2d(512, 256, kernel_size=1),
+            nn.Conv2d(512, 256, kernel_size=1, stride=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(512, 256, kernel_size=1),
+            nn.Conv2d(512, 256, kernel_size=1, stride=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(512, 256, kernel_size=1),
+            nn.Conv2d(512, 256, kernel_size=1, stride=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(512, 256, kernel_size=1),
+            nn.Conv2d(512, 256, kernel_size=1, stride=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(512, 512, kernel_size=1, stride=1, padding=1),
+            nn.Conv2d(512, 512, kernel_size=1, stride=1, padding=0, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(kernel_size=2, stride=2),
             # Fifth batch of convolutional layers.
-            nn.Conv2d(1024, 512, kernel_size=1),
+            nn.Conv2d(1024, 512, kernel_size=1, stride=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(1024, 512, kernel_size=1),
+            nn.Conv2d(1024, 512, kernel_size=1, stride=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(1024, 1024, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(1024, 1024, kernel_size=3, stride=2, padding=1, bias=False),
             nn.LeakyReLU(0.1),
             # Final convolutional layers.
-            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1, bias=False),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1),
-            nn.LeakyReLU(0.1),
+            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1)
         )
 
         # Fully Connected Layers
@@ -100,7 +100,7 @@ class YOLOv1(nn.Module):
         )
 
     def forward(self, x):
-        x = self.conv_layers(x)
+        x = self.darknet_layers(x)
         x = self.fc_layers(x)  # Move to fully connected layers
         x = x.view(-1, self.S, self.S, self.B * 5 + self.C)
         return x
@@ -122,9 +122,9 @@ class YOLOv1Fast(nn.Module):
         self.C = C
 
         # CNN Backbone
-        self.conv_layers = nn.Sequential(
+        self.darknet_layers = nn.Sequential(
             # First Conv Block
-            nn.Conv2d(3, 16, kernel_size=7, stride=1, padding=3), nn.LeakyReLU(0.1),
+            nn.Conv2d(3, 16, kernel_size=7, stride=2, padding=3), nn.LeakyReLU(0.1),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
@@ -169,16 +169,109 @@ class YOLOv1Fast(nn.Module):
         )
 
     def forward(self, x):
-        x = self.conv_layers(x)
+        x = self.darknet_layers(x)
         x = self.fc_layers(x)
         x = x.view(-1, self.S, self.S, self.B * 5 + self.C)
 
         return x
 
 
+class YOLOv1Special(nn.Module):
+    def __init__(self, S=7, B=2, C=1):
+        """
+        YOLOv1 Model.
+
+        Args:
+        - S (int): Grid size (default 7x7).
+        - B (int): Number of bounding boxes per grid cell (default 2).
+        - C (int): Number of classes (default 1).
+        """
+        super(YOLOv1Special, self).__init__()
+        self.S = S
+        self.B = B
+        self.C = C
+
+        # CNN Backbone
+        self.darknet_layers = nn.Sequential(
+            # First convolutional layer (based on paper diagram).
+            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            # Second convolutional layer.
+            nn.Conv2d(64, 192, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            # Third batch of convolutional layers.
+            nn.Conv2d(192, 128, kernel_size=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(256, 256, kernel_size=1, stride=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            # Fourth batch of convolutional layers (repeating the first 2 4 times).
+            nn.Conv2d(512, 256, kernel_size=1, stride=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(512, 256, kernel_size=1, stride=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(512, 256, kernel_size=1, stride=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(512, 256, kernel_size=1, stride=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(512, 512, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            # Fifth batch of convolutional layers.
+            nn.Conv2d(1024, 512, kernel_size=1, stride=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(1024, 512, kernel_size=1, stride=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(1024, 1024, kernel_size=3, stride=2, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            # Final convolutional layers.
+            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.LeakyReLU(0.1)
+        )
+
+        # Fully Connected Layers
+        self.fc_layers = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(1024 * 7 * 7, 4096),
+            nn.Dropout(0.5),
+            nn.LeakyReLU(0.1),
+            nn.Linear(4096, S * S * (B * 5 + C)),
+        )
+
+    def forward(self, x):
+        x = self.darknet_layers(x)
+        x = self.fc_layers(x)  # Move to fully connected layers
+        # x = x.view(-1, self.S, self.S, self.B * 5 + self.C)
+        return x
+
+
 ########################################################################################################################
 # Model tests.
 ########################################################################################################################
-model = YOLOv1(S=14, B=2, C=1)
-test_input = torch.randn(1, 3, 448, 448)
-test_output = model(test_input)
+# model = YOLOv1Special(S=7, B=2, C=1)
+# test_input = torch.randn(1, 3, 448, 448)
+# print(model(test_input).shape)

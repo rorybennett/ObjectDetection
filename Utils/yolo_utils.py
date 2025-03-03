@@ -1,3 +1,4 @@
+from pprint import pprint
 from os.path import join
 
 import cv2
@@ -318,3 +319,7 @@ def plot_validation_results(validation_detections, validation_images, S, B, thre
         plt.close()
 
         batch_number += 1
+
+    return
+
+# def intersection_over_union()
