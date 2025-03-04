@@ -1,8 +1,9 @@
-import torch
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 from collections import Counter
+
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
 
 
 def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):
