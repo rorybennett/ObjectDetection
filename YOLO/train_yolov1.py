@@ -14,7 +14,7 @@ from Transformers import Transformers
 from Utils import general_utils, yolo_utils
 from Utils.arg_parsers import YOLOv1ArgParser
 from YOLO.losses import YOLOv1Loss
-from YOLO.models import YOLOv1, YOLOv1Special
+from YOLO.models import YOLOv1
 
 ########################################################################################################################
 # Track run time of script.
