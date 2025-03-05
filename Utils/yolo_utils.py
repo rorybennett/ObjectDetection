@@ -1,4 +1,3 @@
-from pprint import pprint
 from os.path import join
 
 import cv2
@@ -6,6 +5,8 @@ import numpy as np
 import torch
 from matplotlib import patches, pyplot as plt
 from torchvision import tv_tensors
+
+from Utils import box_colours
 
 
 def draw_yolo_boxes_on_axis(B, S, ax, boxes, title, box_format):
@@ -272,50 +273,70 @@ def plot_losses(best_epoch, training_losses, validation_losses, training_learnin
     plt.close()
 
 
-def plot_validation_results(validation_detections, validation_images, S, B, threshold, counter, train_mean, train_std,
+def plot_validation_results(validation_detections, validation_images, S, B, num_classes, counter, train_mean, train_std,
                             save_path):
     """
-    Draw input images with detected bounding boxes on them. Only the top scoring box of each label/class
-    is displayed. Since FasterRCNN using label 0 for background and RetinaNet using label 0 for the first
-    class, there is an offset that is set using starting_label (for selecting box colour).
+    Draw validation images with only the highest scoring bounding box for each class.
 
-    :param validation_detections: Detection returned by the model in eval() mode.
-    :param validation_images: Images that were given to the model for detection.
-    :param detection_count: Maximum number of detections (boxes) per class to be displayed.
-    :param starting_label: Lowest label value (RetinaNet = 0, FasterRCNN = 1 since 0 is background).
-    :param counter: Image counter, based on batch_size, for saving images with unique names while maintaining
-                    validation dataset size.
-    :param save_path: Save directory.
+    :param validation_detections: Model outputs in eval() mode.
+    :param validation_images: Input images to the model.
+    :param S: Grid size.
+    :param B: Number of bounding boxes per cell.
+    :param num_classes: Total number of classes.
+    :param counter: For unique image filenames.
+    :param train_mean: Mean for denormalisation.
+    :param train_std: Std for denormalisation.
+    :param save_path: Directory to save images.
     """
     batch_number = counter
     for index, (predictions, image) in enumerate(zip(validation_detections, validation_images)):
         image = image.cpu().numpy().transpose((1, 2, 0)).copy()
-
         image = (image * train_std) + train_mean
-
-        # Convert to uint8 format (0-255 range)
-        image = (image * 255).astype(np.uint8) if image.dtype != np.uint8 else image
+        image = (image * 255).astype(np.uint8)
 
         height, width, _ = image.shape
         cell_size = width / S
 
+        # Dictionary to store top box per class: {class_id: (confidence, (x1, y1, x2, y2))}
+        top_boxes = {}
+
         for i in range(S):
             for j in range(S):
+                # Class probabilities are shared per cell (not per box)
+                class_probs = predictions[i, j, B * 5:]
+
                 for b in range(B):
-                    confidence = predictions[i, j, b * 5 + 4]
-                    if confidence > threshold:
-                        x, y, w, h = predictions[i, j, b * 5: b * 5 + 4]
-                        x = (j + x.item()) * cell_size  # Convert to absolute x
-                        y = (i + y.item()) * cell_size  # Convert to absolute y
-                        w = w.item() * width  # Scale width to image size
-                        h = h.item() * height  # Scale height to image size
-                        x1 = int(x - w / 2)
-                        y1 = int(y - h / 2)
-                        x2 = int(x + w / 2)
-                        y2 = int(y + h / 2)
-                        cv2.rectangle(image, (x1, y1), (x2, y2), (255, 255, 255), 2)  # Ensure valid image format
-        plt.imshow(image, cmap='gray')
-        plt.savefig(join(save_path, f'val_result_{batch_number}.png'))
+                    offset = b * 5
+                    x, y, w, h, confidence = predictions[i, j, offset:offset + 5]
+
+                    class_scores = confidence.item() * class_probs
+                    class_id = class_scores.argmax().item()
+                    class_score = class_scores[class_id].item()
+
+                    x = (j + x.item()) * cell_size
+                    y = (i + y.item()) * cell_size
+                    w = w.item() * width
+                    h = h.item() * height
+                    x1 = int(x - w / 2)
+                    y1 = int(y - h / 2)
+                    x2 = int(x + w / 2)
+                    y2 = int(y + h / 2)
+
+                    if class_id not in top_boxes or class_score > top_boxes[class_id][0]:
+                        top_boxes[class_id] = (class_score, (x1, y1, x2, y2))
+
+        # Draw top boxes
+        _, ax = plt.subplots(1)
+        ax.imshow(image)
+        for class_id, (score, (x1, y1, x2, y2)) in top_boxes.items():
+            patch = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor=box_colours[class_id],
+                                      facecolor='none')
+            ax.add_patch(patch)
+            ax.text(x1, y1, f'{class_id}: {score:.1f}', ha='left', va='bottom', color=box_colours[class_id],
+                    weight='bold', fontsize=8, bbox=dict(facecolor='white', alpha=0.5, edgecolor='none'))
+
+        plt.axis('off')
+        plt.savefig(join(save_path, f'val_result_{batch_number}.png'), bbox_inches='tight', pad_inches=0)
         plt.close()
 
         batch_number += 1
