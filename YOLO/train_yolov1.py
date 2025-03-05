@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 from os.path import join
-from pprint import pprint, pformat
 
 import torch
 from torch.nn.utils import clip_grad_norm_
@@ -122,16 +121,6 @@ print('=========================================================================
 ########################################################################################################################
 # Training and validation loop.
 ########################################################################################################################
-# def reset_weights(m):
-#     if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-#         torch.nn.init.kaiming_uniform_(m.weight, nonlinearity='relu')
-#         if m.bias is not None:
-#             torch.nn.init.zeros_(m.bias)
-#
-#
-# yolo_model.apply(reset_weights)  # Reset before training
-
-
 def main():
     print(f'Starting training:')
     early_stopping = EarlyStopping(patience=patience, delta=patience_delta, save_latest=save_latest)
@@ -254,7 +243,8 @@ def main():
         for index, (images, _) in enumerate(val_loader):
             images = images.to(device)
             detections = yolo_model(images)
-            yolo_utils.plot_validation_results(detections, images, S, B, 0.1, counter, train_mean, train_std, save_path)
+            yolo_utils.plot_validation_results(detections, images, S, B, num_classes, counter, train_mean, train_std,
+                                               save_path)
 
             counter += batch_size
     inference_time = datetime.now() - val_start
