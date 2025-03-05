@@ -332,8 +332,8 @@ def plot_validation_results(validation_detections, validation_images, S, B, num_
             patch = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor=box_colours[class_id],
                                       facecolor='none')
             ax.add_patch(patch)
-            ax.text(x1, y1, f'{class_id}: {score:.1f}', ha='left', va='bottom', color=box_colours[class_id],
-                    weight='bold', fontsize=8, bbox=dict(facecolor='white', alpha=0.5, edgecolor='none'))
+            ax.text(x1, y1, f'{class_id}: {score:.1f}', ha='left', color=box_colours[class_id], weight='bold',
+                    va='bottom')
 
         plt.axis('off')
         plt.savefig(join(save_path, f'val_result_{batch_number}.png'), bbox_inches='tight', pad_inches=0)
