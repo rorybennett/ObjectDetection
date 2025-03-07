@@ -219,6 +219,6 @@ class YOLOv1Fast(nn.Module):
 ########################################################################################################################
 import torch
 
-model = YOLOv1Fast(S=7, B=2, C=1, input_channels=3)
-test_input = torch.randn(1, 3, 448, 448)
-print(model(test_input).shape)
+# model = YOLOv1Fast(S=7, B=2, C=1, input_channels=3)
+# test_input = torch.randn(1, 3, 448, 448)
+# print(model(test_input).shape)
