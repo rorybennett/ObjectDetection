@@ -239,7 +239,7 @@ def main():
     ####################################################################################################################
     # On training complete, pass through validation images and plot them using best model (must be reloaded).
     ####################################################################################################################
-    yolo_model.load_state_dict(torch.load(join(save_path, 'model_latest.pth'), weights_only=True)['model_state_dict'])
+    yolo_model.load_state_dict(torch.load(join(save_path, 'model_best.pth'), weights_only=True)['model_state_dict'])
     yolo_model.eval()
     val_start = datetime.now()
     with torch.no_grad():
