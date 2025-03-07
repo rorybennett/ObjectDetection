@@ -96,8 +96,11 @@ class FasterRCNNArgParser(BaseArgParser):
         super().__init__()
         self.parser.add_argument('-is', '--image_size', type=int, default=600,
                                  help='Scaled image size, applied to all images, aspect ratio maintained')
-        self.parser.add_argument('-bbt', '--backbone_type', type=str,
-                                 help='Model backbone (renet50_fpn_v2 seems to be the best)')
+        self.parser.add_argument('-bbt', '--backbone_type', type=str, default='fasterrcnn_resnet50_fpn_v2',
+                                 choices=["fasterrcnn_resnet50_fpn", "fasterrcnn_resnet50_fpn_v2",
+                                          "fasterrcnn_mobilenet_v3_large_fpn", "fasterrcnn_mobilenet_v3_large_320_fpn",
+                                          ],
+                                 help='Model backbone (resnet50_fpn_v2 seems to be the best)')
         self.parser.add_argument('-bw', '--box_weight', type=float, default=1,
                                  help='Weight applied to box loss')
         self.parser.add_argument('-cw', '--class_weight', type=float, default=1,
@@ -116,8 +119,9 @@ class RetinaNetArgParser(BaseArgParser):
         super().__init__()
         self.parser.add_argument('-is', '--image_size', type=int, default=600,
                                  help='Scaled image size, applied to all images, aspect ratio maintained')
-        self.parser.add_argument('-bbt', '--backbone_type', type=str,
-                                 help='Model backbone (renet50_fpn_v2 seems to be the best)')
+        self.parser.add_argument('-bbt', '--backbone_type', type=str, default='retinanet_resnet50_fpn_v2',
+                                 choices=['retinanet_resnet50_fpn_v2', 'mobilenet_v2'],
+                                 help='Model backbone (resnet50_fpn_v2 seems to be the best)')
         self.parser.add_argument('-bw', '--box_weight', type=float, default=1,
                                  help='Weight applied to box loss')
         self.parser.add_argument('-cw', '--class_weight', type=float, default=1,
@@ -138,6 +142,5 @@ class YOLOv1ArgParser(BaseArgParser):
                                  help='YOLOv1 loss weight')
         self.parser.add_argument('-cw', '--conf_weight', type=float, default=0.5,
                                  help='YOLOv1 confidence weight')
-        self.parser.add_argument('-mt', '--model_type', type=str, default='normal',
+        self.parser.add_argument('-mt', '--model_type', choices=['normal', 'fast'], default='normal',
                                  help='YOLOv1 model type, either normal or fast')
-
