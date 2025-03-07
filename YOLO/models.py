@@ -206,9 +206,7 @@ class YOLOv1Fast(nn.Module):
         )
 
     def forward(self, x):
-        print(x.shape)
         x = self.darknet_fast_layers(x)
-        print(x.shape)
         x = self.fc_layers(x)
         x = x.view(-1, self.S, self.S, self.B * 5 + self.C)
         return x
