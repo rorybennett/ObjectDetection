@@ -273,8 +273,8 @@ def plot_losses(best_epoch, training_losses, validation_losses, training_learnin
     plt.close()
 
 
-def plot_validation_results(validation_detections, validation_images, S, B, counter, train_mean, train_std,
-                            save_path):
+def plot_top_validation_results(validation_detections, validation_images, S, B, counter, train_mean, train_std,
+                                save_path):
     """
     Draw validation images with only the highest scoring bounding box for each class.
 
@@ -341,4 +341,3 @@ def plot_validation_results(validation_detections, validation_images, S, B, coun
         batch_number += 1
 
     return
-

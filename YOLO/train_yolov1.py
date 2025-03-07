@@ -247,8 +247,7 @@ def main():
         for index, (images, _) in enumerate(val_loader):
             images = images.to(device)
             detections = yolo_model(images)
-            yolo_utils.plot_validation_results(detections, images, S, B, num_classes, counter, train_mean, train_std,
-                                               save_path)
+            yolo_utils.plot_top_validation_results(detections, images, S, B, counter, train_mean, train_std, save_path)
 
             counter += batch_size
     inference_time = datetime.now() - val_start
