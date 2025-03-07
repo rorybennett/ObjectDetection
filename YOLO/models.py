@@ -146,7 +146,7 @@ class YOLOv1Fast(nn.Module):
         self.input_channels = input_channels
 
         # CNN Backbone
-        self.darknet_layers = nn.Sequential(
+        self.darknet_fast_layers = nn.Sequential(
             # First Conv Block
             nn.Conv2d(self.input_channels, 16, kernel_size=7, stride=2, padding=3), nn.LeakyReLU(0.1),
             nn.BatchNorm2d(16),
@@ -181,7 +181,8 @@ class YOLOv1Fast(nn.Module):
             nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.1),
-            nn.MaxPool2d(2, 2),
+            # Remove this maxpool to ensure 7x7 feature map output from dark_net_fast layers.
+            # nn.MaxPool2d(2, 2),
 
             # Final Convolutions (Keep Feature Map 7x7)
             nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
@@ -206,7 +207,7 @@ class YOLOv1Fast(nn.Module):
 
     def forward(self, x):
         print(x.shape)
-        x = self.darknet_layers(x)
+        x = self.darknet_fast_layers(x)
         print(x.shape)
         x = self.fc_layers(x)
         x = x.view(-1, self.S, self.S, self.B * 5 + self.C)
@@ -216,8 +217,8 @@ class YOLOv1Fast(nn.Module):
 ########################################################################################################################
 # Model loading tests.
 ########################################################################################################################
-# import torch
-#
-# model = YOLOv1Fast(S=7, B=2, C=1, input_channels=3)
-# test_input = torch.randn(1, 3, 448, 448)
-# print(model(test_input).shape)
+import torch
+
+model = YOLOv1Fast(S=7, B=2, C=1, input_channels=3)
+test_input = torch.randn(1, 3, 448, 448)
+print(model(test_input).shape)
