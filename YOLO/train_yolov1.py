@@ -41,7 +41,7 @@ train_images_path = args.train_images_path  # Path to training images directory.
 train_labels_path = args.train_labels_path  # Path to training labels directory.
 val_images_path = args.val_images_path  # Path to validation images directory.
 val_labels_path = args.val_labels_path  # Path to validation labels directory.
-save_path = args.save_path  # Path to saving directory, where models, loss plots, and validation results are stored.
+save_path = args.save_dir  # Path to saving directory, where models, loss plots, and validation results are stored.
 if not os.path.isdir(save_path):
     os.makedirs(save_path)  # Make save_path into dir.
 batch_size = args.batch_size  # Batch size for loader.
