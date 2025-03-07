@@ -13,7 +13,7 @@ from Transformers import Transformers
 from Utils import general_utils, yolo_utils
 from Utils.arg_parsers import YOLOv1ArgParser
 from YOLO.losses import YOLOv1Loss
-from YOLO.models import YOLOv1
+from YOLO.models import YOLOv1, YOLOv1Fast
 
 ########################################################################################################################
 # Track run time of script.
@@ -60,6 +60,7 @@ S = args.yolo_s  # YOLOv1 grid size.
 B = args.yolo_b  # YOLOv1 cell box prediction count.
 loss_weight = args.loss_weight  # Weight for localization loss.
 conf_weight = args.conf_weight  # Weight for confidence loss on no-object cells.
+model_type = args.model_type  # Model type, normal or fast.
 
 ########################################################################################################################
 # Transformers and datasets used by models.
@@ -90,7 +91,10 @@ print(f'Loading YOLOv1 model...', end=' ')
 # Loss function
 criterion = YOLOv1Loss(S=S, B=B, C=num_classes).to(device)
 # Initialize model
-yolo_model = YOLOv1(S=S, B=B, C=num_classes).to(device)
+if model_type == 'normal':
+    yolo_model = YOLOv1(S=S, B=B, C=num_classes).to(device)
+else:
+    yolo_model = YOLOv1Fast(S=S, B=B, C=num_classes).to(device)
 # Optimizer
 params = [p for p in yolo_model.parameters() if p.requires_grad]
 optimiser = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)

@@ -138,3 +138,6 @@ class YOLOv1ArgParser(BaseArgParser):
                                  help='YOLOv1 loss weight')
         self.parser.add_argument('-cw', '--conf_weight', type=float, default=0.5,
                                  help='YOLOv1 confidence weight')
+        self.parser.add_argument('-mt', '--model_type', type=str, default='normal',
+                                 help='YOLOv1 model type, either normal or fast')
+
