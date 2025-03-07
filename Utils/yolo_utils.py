@@ -273,7 +273,7 @@ def plot_losses(best_epoch, training_losses, validation_losses, training_learnin
     plt.close()
 
 
-def plot_validation_results(validation_detections, validation_images, S, B, num_classes, counter, train_mean, train_std,
+def plot_validation_results(validation_detections, validation_images, S, B, counter, train_mean, train_std,
                             save_path):
     """
     Draw validation images with only the highest scoring bounding box for each class.
@@ -282,7 +282,6 @@ def plot_validation_results(validation_detections, validation_images, S, B, num_
     :param validation_images: Input images to the model.
     :param S: Grid size.
     :param B: Number of bounding boxes per cell.
-    :param num_classes: Total number of classes.
     :param counter: For unique image filenames.
     :param train_mean: Mean for denormalisation.
     :param train_std: Std for denormalisation.
@@ -343,4 +342,3 @@ def plot_validation_results(validation_detections, validation_images, S, B, num_
 
     return
 
-# def intersection_over_union()
