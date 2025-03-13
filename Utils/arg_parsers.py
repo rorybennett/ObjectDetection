@@ -17,20 +17,6 @@ class BaseArgParser:
         """
         self.parser = argparse.ArgumentParser()
         ################################################################################################################
-        # Path parameters
-        ################################################################################################################
-        self.parser.add_argument('-tip', '--train_images_path', type=str, required=True,
-                                 help='Path to training images directory')
-        self.parser.add_argument('-tlp', '--train_labels_path', type=str, required=True,
-                                 help='Path to training labels directory')
-        self.parser.add_argument('-vip', '--val_images_path', type=str, required=True,
-                                 help='Path to validation images directory')
-        self.parser.add_argument('-vlp', '--val_labels_path', type=str, required=True,
-                                 help='Path to validation images directory')
-        self.parser.add_argument('-sp', '--save_path', type=str, required=True,
-                                 help='Path to save directory where model_best.pth and other files are stored')
-
-        ################################################################################################################
         # Model parameters
         ################################################################################################################
         self.parser.add_argument('-nc', '--number_of_classes', type=int, required=True,
@@ -94,6 +80,20 @@ class FasterRCNNArgParser(BaseArgParser):
         Set up and return the parser with additional arguments for FasterRCNN.
         """
         super().__init__()
+        ################################################################################################################
+        # Path parameters
+        ################################################################################################################
+        self.parser.add_argument('-tip', '--train_images_path', type=str, required=True,
+                                 help='Path to training images directory')
+        self.parser.add_argument('-tlp', '--train_labels_path', type=str, required=True,
+                                 help='Path to training labels directory')
+        self.parser.add_argument('-vip', '--val_images_path', type=str, required=True,
+                                 help='Path to validation images directory')
+        self.parser.add_argument('-vlp', '--val_labels_path', type=str, required=True,
+                                 help='Path to validation images directory')
+        self.parser.add_argument('-sp', '--save_path', type=str, required=True,
+                                 help='Path to save directory where model_best.pth and other files are stored')
+
         self.parser.add_argument('-is', '--image_size', type=int, default=600,
                                  help='Scaled image size, applied to all images, aspect ratio maintained')
         self.parser.add_argument('-bbt', '--backbone_type', type=str, default='fasterrcnn_resnet50_fpn_v2',
@@ -117,6 +117,20 @@ class RetinaNetArgParser(BaseArgParser):
         Set up and return the parser with additional arguments for RetinaNet.
         """
         super().__init__()
+        ################################################################################################################
+        # Path parameters
+        ################################################################################################################
+        self.parser.add_argument('-tip', '--train_images_path', type=str, required=True,
+                                 help='Path to training images directory')
+        self.parser.add_argument('-tlp', '--train_labels_path', type=str, required=True,
+                                 help='Path to training labels directory')
+        self.parser.add_argument('-vip', '--val_images_path', type=str, required=True,
+                                 help='Path to validation images directory')
+        self.parser.add_argument('-vlp', '--val_labels_path', type=str, required=True,
+                                 help='Path to validation images directory')
+        self.parser.add_argument('-sp', '--save_path', type=str, required=True,
+                                 help='Path to save directory where model_best.pth and other files are stored')
+
         self.parser.add_argument('-is', '--image_size', type=int, default=600,
                                  help='Scaled image size, applied to all images, aspect ratio maintained')
         self.parser.add_argument('-bbt', '--backbone_type', type=str, default='retinanet_resnet50_fpn_v2',
@@ -134,6 +148,20 @@ class YOLOv1ArgParser(BaseArgParser):
         Set up and return the parser with additional arguments for YOLOv1 and YOLOv1_fast.
         """
         super().__init__()
+        ################################################################################################################
+        # Path parameters
+        ################################################################################################################
+        self.parser.add_argument('-tip', '--train_images_path', type=str, required=True,
+                                 help='Path to training images directory')
+        self.parser.add_argument('-tlp', '--train_labels_path', type=str, required=True,
+                                 help='Path to training labels directory')
+        self.parser.add_argument('-vip', '--val_images_path', type=str, required=True,
+                                 help='Path to validation images directory')
+        self.parser.add_argument('-vlp', '--val_labels_path', type=str, required=True,
+                                 help='Path to validation images directory')
+        self.parser.add_argument('-sp', '--save_path', type=str, required=True,
+                                 help='Path to save directory where model_best.pth and other files are stored')
+
         self.parser.add_argument('-ys', '--yolo_s', type=int, default=7,
                                  help='YOLOv1 grid size (SxS)')
         self.parser.add_argument('-yb', '--yolo_b', type=int, default=2,
@@ -144,3 +172,25 @@ class YOLOv1ArgParser(BaseArgParser):
                                  help='YOLOv1 confidence weight')
         self.parser.add_argument('-mt', '--model_type', choices=['normal', 'fast'], default='normal',
                                  help='YOLOv1 model type, either normal or fast')
+
+
+class YOLOv8ArgParser(BaseArgParser):
+    def __init__(self):
+        """
+        Set up and return the parser with additional arguments for YOLOv8.
+        """
+        super().__init__()
+        ################################################################################################################
+        # Path parameters
+        ################################################################################################################
+        self.parser.add_argument('-pp', '--project_path', type=str, required=True,
+                                 help='Project path, where training output are saved')
+        self.parser.add_argument('-n', '--name', type=str, required=True,
+                                 help='Name of training run')
+        self.parser.add_argument('-ms', '--model_size', type=str, default='x',
+                                 choices=['n', 's', 'm', 'l', 'x'],
+                                 help='YOLOv8 model size (n, s, m, l, x)')
+        self.parser.add_argument('-dyp', '--dataset_yaml_path', type=str, required=True,
+                                 help='Path to dataset.yaml file')
+        self.parser.add_argument('-flr', '--flip_lr', type=float, default=0.2,
+                                 help='Probability of flipping image lr during training')
