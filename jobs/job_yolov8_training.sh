@@ -54,8 +54,8 @@ fold=${inputs[$((3 * SGE_TASK_ID - 2))]}
 model_size=${inputs[$((3 * SGE_TASK_ID - 1))]}
 
 
-python YOLO/train_yolov8.py \
-  -dyp="../ObjectDetectionDatasets/3D/$objects/dataset_$fold.yaml" \
+python -m YOLO.train_yolov8 \
+  -dyp="/data/home/exx851/ObjectDetection/ObjectDetectionDatasets/3D/ProspectiveData/$objects/dataset_$fold.yaml" \
   -pp="/data/scratch/exx851/YOLOv8/3D/ProspectiveData" \
   -n="$objects/fold$fold_$model_size" \
   -ms="$model_size" \

@@ -1,4 +1,3 @@
-# Load a new model
 from ultralytics import YOLO
 
 from Utils.arg_parsers import YOLOv8ArgParser
@@ -8,8 +7,8 @@ from Utils.arg_parsers import YOLOv8ArgParser
 ########################################################################################################################
 arg_parser = YOLOv8ArgParser()
 args = arg_parser.parse_args()
-project_path = args.project_path()  # Project folder.
-name = args.name()  # Training run name.
+project_path = args.project_path  # Project folder.
+name = args.name  # Training run name.
 model_size = args.model_size  # Size of model to use.
 dataset_yaml_path = args.dataset_yaml_path  # Path to dataset .yaml file.
 flip_lr = args.flip_lr  # Probability of left-right flipping.
@@ -35,7 +34,7 @@ def main():
                 pretrained=False,
                 verbose=False,
                 workers=0,
-                batch=0.9,
+                batch=0.6,
                 cos_lr=True,
                 plots=True,
                 patience=patience,

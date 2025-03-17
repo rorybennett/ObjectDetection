@@ -17,12 +17,6 @@ class BaseArgParser:
         """
         self.parser = argparse.ArgumentParser()
         ################################################################################################################
-        # Model parameters
-        ################################################################################################################
-        self.parser.add_argument('-nc', '--number_of_classes', type=int, required=True,
-                                 help='Number of classes being considered (FasterRCNN has +1 due to background class)')
-
-        ################################################################################################################
         # Training parameters
         ################################################################################################################
         self.parser.add_argument('-e', '--epochs', type=int, default=1000,
@@ -101,6 +95,13 @@ class FasterRCNNArgParser(BaseArgParser):
                                           "fasterrcnn_mobilenet_v3_large_fpn", "fasterrcnn_mobilenet_v3_large_320_fpn",
                                           ],
                                  help='Model backbone (resnet50_fpn_v2 seems to be the best)')
+
+        ################################################################################################################
+        # Model parameters
+        ################################################################################################################
+        self.parser.add_argument('-nc', '--number_of_classes', type=int, required=True,
+                                 help='Number of classes being considered (FasterRCNN has +1 due to background class)')
+
         self.parser.add_argument('-bw', '--box_weight', type=float, default=1,
                                  help='Weight applied to box loss')
         self.parser.add_argument('-cw', '--class_weight', type=float, default=1,
@@ -130,6 +131,12 @@ class RetinaNetArgParser(BaseArgParser):
                                  help='Path to validation images directory')
         self.parser.add_argument('-sp', '--save_path', type=str, required=True,
                                  help='Path to save directory where model_best.pth and other files are stored')
+
+        ################################################################################################################
+        # Model parameters
+        ################################################################################################################
+        self.parser.add_argument('-nc', '--number_of_classes', type=int, required=True,
+                                 help='Number of classes being considered (FasterRCNN has +1 due to background class)')
 
         self.parser.add_argument('-is', '--image_size', type=int, default=600,
                                  help='Scaled image size, applied to all images, aspect ratio maintained')
