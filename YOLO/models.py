@@ -215,8 +215,8 @@ class YOLOv1Fast(nn.Module):
 ########################################################################################################################
 # Model loading tests.
 ########################################################################################################################
-import torch
-
+# import torch
+#
 # model = YOLOv1Fast(S=7, B=2, C=1, input_channels=3)
 # test_input = torch.randn(1, 3, 448, 448)
 # print(model(test_input).shape)

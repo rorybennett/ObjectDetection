@@ -155,6 +155,8 @@ class YOLOv1ArgParser(BaseArgParser):
         Set up and return the parser with additional arguments for YOLOv1 and YOLOv1_fast.
         """
         super().__init__()
+        self.parser.add_argument('-nc', '--number_of_classes', type=int, required=True,
+                                 help='Number of classes being considered')
         ################################################################################################################
         # Path parameters
         ################################################################################################################
