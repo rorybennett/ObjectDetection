@@ -148,50 +148,50 @@ class YOLOv1Fast(nn.Module):
         # CNN Backbone
         self.darknet_fast_layers = nn.Sequential(
             # First Conv Block
-            nn.Conv2d(self.input_channels, 16, kernel_size=7, stride=2, padding=3), nn.LeakyReLU(0.1),
+            nn.Conv2d(self.input_channels, 16, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(16),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Second Conv Block
-            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
+            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(32),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Third Conv Block
-            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
+            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(64),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Fourth Conv Block
-            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
+            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(128),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Fifth Conv Block
-            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
+            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(256),
             nn.LeakyReLU(0.1),
             nn.MaxPool2d(2, 2),
 
             # Sixth Conv Block
-            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(0.1),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.1),
             # Remove this maxpool to ensure 7x7 feature map output from dark_net_fast layers.
             # nn.MaxPool2d(2, 2),
 
             # Final Convolutions (Keep Feature Map 7x7)
-            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(1024),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.1),
-            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(1024),
             nn.LeakyReLU(0.1)
         )
