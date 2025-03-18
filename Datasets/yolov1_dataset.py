@@ -166,12 +166,12 @@ class ProstateBladderDataset(Dataset):
         fig, axes = plt.subplots(1, 2, figsize=(12, 6))
 
         axes[0].imshow(img_original, cmap="gray", vmin=-2, vmax=2)
-        yolo_utils.draw_yolo_boxes_on_axis(self.B, self.S, axes[0], target_original["boxes"],
-                                           "Original Image with Bounding Boxes", box_format='xyxy')
+        self.draw_yolo_boxes_on_axis(self.B, self.S, axes[0], target_original["boxes"],
+                                     "Original Image with Bounding Boxes", box_format='xyxy')
 
         axes[1].imshow(img_transformed_display, cmap="gray", vmin=-2, vmax=2)
-        yolo_utils.draw_yolo_boxes_on_axis(self.B, self.S, axes[1], target_transformed,
-                                           "Transformed Image with Bounding Boxes", box_format='yolov1')
+        self.draw_yolo_boxes_on_axis(self.B, self.S, axes[1], target_transformed,
+                                     "Transformed Image with Bounding Boxes", box_format='yolov1')
 
         plt.show()
 
