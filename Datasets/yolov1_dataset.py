@@ -3,7 +3,7 @@ import os
 import cv2
 import numpy as np
 import torch
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, patches
 from natsort import natsorted
 from torch.utils.data import Dataset
 from torchvision import tv_tensors
@@ -232,3 +232,58 @@ class ProstateBladderDataset(Dataset):
             yolo_v1_label[grid_y, grid_x, class_start_idx + class_id] = 1  # Set class
 
         return torch.tensor(yolo_v1_label, dtype=torch.float32)
+
+    @staticmethod
+    def draw_yolo_boxes_on_axis(B, S, ax, boxes, title, box_format):
+        """
+        Draws bounding boxes directly on the provided axis.
+
+        - For 'xyxy' format: boxes are directly drawn.
+        - For 'yolov1' format: boxes have been converted to XYXY before drawing.
+
+        :param B: Boxes per grid cell.
+        :param S: Grid size (SxS).
+        :param ax: Matplotlib axis to draw on.
+        :param boxes: Bounding boxes in either XYXY or YOLOv1 format.
+        :param title: Title of the image.
+        :param box_format: 'xyxy' for standard boxes, 'yolov1' for YOLO grid format.
+        """
+        ax.set_title(title)
+
+        if box_format == 'xyxy':
+            # Standard XYXY format (boxes.shape = (N, 4))
+            for box in boxes:
+                if len(box) != 4:
+                    continue
+                x_min, y_min, x_max, y_max = box
+                rect = patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min,
+                                         linewidth=2, edgecolor='red', facecolor='none')
+                ax.add_patch(rect)
+
+        elif box_format == 'yolov1':
+            # YOLOv1 format (boxes.shape = (S, S, B*5 + C))
+            for i in range(S):
+                for j in range(S):
+                    for b in range(B):
+                        conf = boxes[i, j, 4 + b * 5]  # Object confidence
+                        if conf > 0:
+                            # Extract (x, y, w, h)
+                            x, y, w, h = boxes[i, j, b * 5: b * 5 + 4]
+
+                            # Convert relative (to cell) to absolute (image) coordinates
+                            cell_size = 448 / S
+                            abs_x = (j + x) * cell_size
+                            abs_y = (i + y) * cell_size
+                            abs_w = w * 448
+                            abs_h = h * 448
+
+                            # Convert to XYXY format
+                            x_min = abs_x - abs_w / 2
+                            y_min = abs_y - abs_h / 2
+                            x_max = abs_x + abs_w / 2
+                            y_max = abs_y + abs_h / 2
+
+                            rect = patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min,
+                                                     linewidth=2, edgecolor='blue', facecolor='none')
+                            ax.add_patch(rect)
+        return

@@ -9,59 +9,6 @@ from torchvision import tv_tensors
 from Utils import box_colours
 
 
-def draw_yolo_boxes_on_axis(B, S, ax, boxes, title, box_format):
-    """
-    Draws bounding boxes directly on the provided axis.
-
-    - For 'xyxy' format: boxes are directly drawn.
-    - For 'yolov1' format: boxes have been converted to XYXY before drawing.
-
-    :param B: Boxes per grid cell.
-    :param S: Grid size (SxS).
-    :param ax: Matplotlib axis to draw on.
-    :param boxes: Bounding boxes in either XYXY or YOLOv1 format.
-    :param title: Title of the image.
-    :param box_format: 'xyxy' for standard boxes, 'yolov1' for YOLO grid format.
-    """
-    ax.set_title(title)
-
-    if box_format == 'xyxy':
-        # Standard XYXY format (boxes.shape = (N, 4))
-        for box in boxes:
-            if len(box) != 4:
-                continue
-            x_min, y_min, x_max, y_max = box
-            rect = patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min,
-                                     linewidth=2, edgecolor='red', facecolor='none')
-            ax.add_patch(rect)
-
-    elif box_format == 'yolov1':
-        # YOLOv1 format (boxes.shape = (S, S, B*5 + C))
-        for i in range(S):
-            for j in range(S):
-                for b in range(B):
-                    conf = boxes[i, j, 4 + b * 5]  # Object confidence
-                    if conf > 0:
-                        # Extract (x, y, w, h)
-                        x, y, w, h = boxes[i, j, b * 5: b * 5 + 4]
-
-                        # Convert relative (to cell) to absolute (image) coordinates
-                        cell_size = 448 / S
-                        abs_x = (j + x) * cell_size
-                        abs_y = (i + y) * cell_size
-                        abs_w = w * 448
-                        abs_h = h * 448
-
-                        # Convert to XYXY format
-                        x_min = abs_x - abs_w / 2
-                        y_min = abs_y - abs_h / 2
-                        x_max = abs_x + abs_w / 2
-                        y_max = abs_y + abs_h / 2
-
-                        rect = patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min,
-                                                 linewidth=2, edgecolor='blue', facecolor='none')
-                        ax.add_patch(rect)
-    return
 
 
 def read_image(image_path):
@@ -117,68 +64,11 @@ def get_label_data(label_path, img_size, idx):
         "boxes": tv_tensors.BoundingBoxes(boxes, format="XYXY", canvas_size=(img_height, img_width)),
         "labels": labels,
         "image_id": image_id,
-        "area": area
+        "area": area,
+        "img_size": img_size
     }
 
     return target
-
-
-def convert_xyxy_to_yolov1(target, S=7, B=2, C=1):
-    """
-    Converts target labels from XYXY format to YOLOv1 format, assuming an image size of (448, 448). Returns the target
-    as a torch.tensor.
-
-    :param target: Dictionary containing target data in XYXY format.
-    :param S: Grid size (SxS).
-    :param B: Number of bounding boxes per grid cell.
-    :param C: Number of classes.
-    :return: YOLOv1 label tensor of shape (S, S, B*5 + C).
-    """
-    img_width, img_height = 448, 448
-    yolo_v1_label = np.zeros((S, S, B * 5 + C), dtype=np.float32)  # (7,7,11) for 1 class
-
-    boxes = target["boxes"]
-    labels = target["labels"]
-
-    for i in range(len(boxes)):
-        x_min, y_min, x_max, y_max = boxes[i]
-        class_id = labels[i].item()
-
-        # Convert absolute XYXY to YOLO (x_center, y_center, width, height)
-        x_center = (x_min + x_max) / 2
-        y_center = (y_min + y_max) / 2
-        width = x_max - x_min
-        height = y_max - y_min
-
-        # Normalize by image size
-        x_center /= img_width
-        y_center /= img_height
-        width /= img_width
-        height /= img_height
-
-        # Determine which grid cell (row, col) the box belongs to
-        grid_x = int(x_center * S)
-        grid_y = int(y_center * S)
-
-        # Compute relative coordinates within the grid cell
-        x_rel = (x_center * S) - grid_x
-        y_rel = (y_center * S) - grid_y
-        w_rel = width
-        h_rel = height
-
-        # Assign values to YOLOv1 label tensor
-        for b in range(B):
-            conf_index = b * 5 + 4  # Confidence score index in the tensor
-            if yolo_v1_label[grid_y, grid_x, conf_index] == 0:  # Check if this slot is empty
-                yolo_v1_label[grid_y, grid_x, b * 5: (b + 1) * 5] = [x_rel, y_rel, w_rel, h_rel, 1]
-                break  # Assign only one box per object
-
-        # Assign class probabilities (One-Hot Encoding)
-        class_start_idx = B * 5  # After all bounding boxes
-        yolo_v1_label[grid_y, grid_x, class_start_idx:] = 0  # Reset class probabilities
-        yolo_v1_label[grid_y, grid_x, class_start_idx + class_id] = 1  # Set class
-
-    return torch.tensor(yolo_v1_label, dtype=torch.float32)
 
 
 def plot_losses(best_epoch, training_losses, validation_losses, training_learning_rates, save_path):
