@@ -32,10 +32,8 @@ class ProstateBladderDataset(Dataset):
         :param verbose: Print details to screen.
         """
         # Default values for when the mean and std are calculated without using the dataset.
-        if train_mean is None:
-            train_mean = 0
-        if train_std is None:
-            train_std = 1
+        train_mean = train_mean or 0
+        train_std = train_std or 1
 
         self.images_root = images_root
         self.labels_root = labels_root
@@ -176,3 +174,61 @@ class ProstateBladderDataset(Dataset):
                                            "Transformed Image with Bounding Boxes", box_format='yolov1')
 
         plt.show()
+
+    @staticmethod
+    def convert_xyxy_to_yolov1(target, S=7, B=2, C=1):
+        """
+        Converts target labels from XYXY format to YOLOv1 format, assuming an image size of (448, 448). Returns the target
+        as a torch.tensor.
+
+        :param target: Dictionary containing target data in XYXY format.
+        :param S: Grid size (SxS).
+        :param B: Number of bounding boxes per grid cell.
+        :param C: Number of classes.
+        :return: YOLOv1 label tensor of shape (S, S, B*5 + C).
+        """
+        img_width, img_height = 448, 448
+        yolo_v1_label = np.zeros((S, S, B * 5 + C), dtype=np.float32)  # (7,7,11) for 1 class
+
+        boxes = target["boxes"]
+        labels = target["labels"]
+
+        for i in range(len(boxes)):
+            x_min, y_min, x_max, y_max = boxes[i]
+            class_id = labels[i].item()
+
+            # Convert absolute XYXY to YOLO (x_center, y_center, width, height)
+            x_center = (x_min + x_max) / 2
+            y_center = (y_min + y_max) / 2
+            width = x_max - x_min
+            height = y_max - y_min
+
+            # Normalize by image size
+            x_center /= img_width
+            y_center /= img_height
+            width /= img_width
+            height /= img_height
+
+            # Determine which grid cell (row, col) the box belongs to
+            grid_x = int(x_center * S)
+            grid_y = int(y_center * S)
+
+            # Compute relative coordinates within the grid cell
+            x_rel = (x_center * S) - grid_x
+            y_rel = (y_center * S) - grid_y
+            w_rel = width
+            h_rel = height
+
+            # Assign values to YOLOv1 label tensor
+            for b in range(B):
+                conf_index = b * 5 + 4  # Confidence score index in the tensor
+                if yolo_v1_label[grid_y, grid_x, conf_index] == 0:  # Check if this slot is empty
+                    yolo_v1_label[grid_y, grid_x, b * 5: (b + 1) * 5] = [x_rel, y_rel, w_rel, h_rel, 1]
+                    break  # Assign only one box per object
+
+            # Assign class probabilities (One-Hot Encoding)
+            class_start_idx = B * 5  # After all bounding boxes
+            yolo_v1_label[grid_y, grid_x, class_start_idx:] = 0  # Reset class probabilities
+            yolo_v1_label[grid_y, grid_x, class_start_idx + class_id] = 1  # Set class
+
+        return torch.tensor(yolo_v1_label, dtype=torch.float32)
