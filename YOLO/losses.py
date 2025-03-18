@@ -1,8 +1,8 @@
 import torch
-from torch import nn
+from torch.nn import Module, MSELoss, BCELoss, CrossEntropyLoss
 
 
-class YOLOv1Loss(nn.Module):
+class YOLOv1Loss(Module):
     def __init__(self, S=7, B=2, C=1):
         """
         YOLOv1 Loss Function, created by GPT, based on the original paper's loss criterion.
@@ -17,7 +17,7 @@ class YOLOv1Loss(nn.Module):
         self.S = S
         self.B = B
         self.C = C
-        self.mse = nn.MSELoss(reduction="sum")
+        self.mse = MSELoss(reduction="sum")
 
     def forward(self, predictions, target):
         """
@@ -114,3 +114,48 @@ class YOLOv1Loss(nn.Module):
         box2_area = (box2_x2 - box2_x1) * (box2_y2 - box2_y1)
 
         return intersection_area / (box1_area + box2_area - intersection_area + 1e-6)
+
+
+class YOLOv2Loss(Module):
+    def __init__(self, anchors, num_classes):
+        super(YOLOv2Loss, self).__init__()
+        self.anchors = torch.tensor(anchors).float()
+        self.num_classes = num_classes
+
+    def forward(self, predictions, targets, grid_size):
+        """
+        - predictions: (B, num_anchors, 5 + num_classes, H, W)
+        - targets: Ground truth tensor (B, num_anchors, 5 + num_classes, H, W)
+        - grid_size: The spatial size of the feature map (e.g., 13x13 for 416x416 input)
+        """
+        device = predictions.device
+        self.anchors = self.anchors.to(device)
+
+        # Extract individual predictions
+        tx = predictions[:, :, 0, :, :]
+        ty = predictions[:, :, 1, :, :]
+        tw = predictions[:, :, 2, :, :]
+        th = predictions[:, :, 3, :, :]
+        objectness = predictions[:, :, 4, :, :]
+        class_scores = predictions[:, :, 5:, :, :]
+
+        # Apply transformations
+        tx = torch.sigmoid(tx)  # Center x offset
+        ty = torch.sigmoid(ty)  # Center y offset
+        objectness = torch.sigmoid(objectness)  # Objectness score
+        class_scores = torch.softmax(class_scores, dim=2)  # Class probabilities
+
+        # Compute actual bounding box coordinates
+        bx = tx + torch.arange(grid_size, device=device).float().view(1, 1, 1, -1)
+        by = ty + torch.arange(grid_size, device=device).float().view(1, 1, -1, 1)
+        bw = torch.exp(tw) * self.anchors[:, 0].view(1, -1, 1, 1)
+        bh = torch.exp(th) * self.anchors[:, 1].view(1, -1, 1, 1)
+
+        # Compute loss components
+        coord_loss = MSELoss()(bx, targets[:, :, 0, :, :]) + MSELoss()(by, targets[:, :, 1, :, :])
+        size_loss = MSELoss()(bw, targets[:, :, 2, :, :]) + MSELoss()(bh, targets[:, :, 3, :, :])
+        obj_loss = BCELoss()(objectness, targets[:, :, 4, :, :])
+        class_loss = CrossEntropyLoss()(class_scores.permute(0, 1, 3, 4, 2).contiguous().view(-1, self.num_classes),
+                                        targets[:, :, 5:, :, :].argmax(dim=2).view(-1))
+
+        return coord_loss, size_loss, obj_loss, class_loss
