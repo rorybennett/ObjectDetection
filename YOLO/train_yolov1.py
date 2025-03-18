@@ -7,13 +7,13 @@ from torch.nn.utils import clip_grad_norm_
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 from torch.utils.data import DataLoader
 
-from Datasets.yolo_dataset import ProstateBladderDataset as PBD
+from Datasets.yolov1_dataset import ProstateBladderDataset as PBD
 from EarlyStopping.EarlyStopping import EarlyStopping
 from Transformers import Transformers
 from Utils import general_utils, yolo_utils
 from Utils.arg_parsers import YOLOv1ArgParser
 from YOLO.losses import YOLOv1Loss
-from YOLO.models import YOLOv1, YOLOv1Fast
+from YOLO.yolov1_models import YOLOv1, YOLOv1Fast
 
 ########################################################################################################################
 # Track run time of script.
