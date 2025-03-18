@@ -9,8 +9,6 @@ from torchvision import tv_tensors
 from Utils import box_colours
 
 
-
-
 def read_image(image_path):
     """
     Read an image at the given path for use by the yolo_dataset.ProstateBladderDataset class.
