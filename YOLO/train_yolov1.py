@@ -228,8 +228,8 @@ def main():
         if final_epoch_reached + 1 > warmup_epochs:
             early_stopping(epoch_val_loss[0], yolo_model, epoch, optimiser, save_dir)
 
-        yolo_utils.plot_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
-                               save_dir)
+        yolo_utils.plot_yolov1_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates,
+                                        save_dir)
         if early_stopping.early_stop:
             print('Patience reached, stopping early.')
             break
@@ -247,7 +247,7 @@ def main():
         for index, (images, _) in enumerate(val_loader):
             images = images.to(device)
             detections = yolo_model(images)
-            yolo_utils.plot_top_validation_results(detections, images, S, B, counter, train_mean, train_std, save_dir)
+            yolo_utils.plot_yolov1_validation_results(detections, images, S, B, counter, train_mean, train_std, save_dir)
 
             counter += batch_size
     inference_time = datetime.now() - val_start

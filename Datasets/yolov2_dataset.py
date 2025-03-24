@@ -117,9 +117,9 @@ class ProstateBladderDataset(Dataset):
 
         for index, (image, label) in enumerate(zip(self.images, self.labels)):
             # Read and resize image
-            img = cv2.imread(f'{self.images_root}/{image}', cv2.IMREAD_GRAYSCALE)
+            img = cv2.imread(f'{self.images_root}/{image}', cv2.IMREAD_GRAYSCALE) / 255
             # Resize before processing, so anchor boxes are the correct size.
-            img = cv2.resize(img, (self.img_size, self.img_size)) / 255
+            img = cv2.resize(img, (self.img_size, self.img_size))
 
             # Calculate mean and std per image.
             m, s = cv2.meanStdDev(img)
@@ -131,10 +131,9 @@ class ProstateBladderDataset(Dataset):
             target = yolo_utils.get_label_data(label_path, img_size=img.shape, idx=index)
 
             # Extract widths & heights of bounding boxes
-            img_w, img_h = img.shape
             boxes = target["boxes"]
-            widths = (boxes[:, 2] - boxes[:, 0]) / img_w  # Normalize width
-            heights = (boxes[:, 3] - boxes[:, 1]) / img_h  # Normalize height
+            widths = (boxes[:, 2] - boxes[:, 0]) / self.img_size  # Normalize width
+            heights = (boxes[:, 3] - boxes[:, 1]) / self.img_size  # Normalize height
 
             bboxes.extend(zip(widths, heights))
 
@@ -142,7 +141,7 @@ class ProstateBladderDataset(Dataset):
         dataset_mean = np.mean(means)
         dataset_std = np.mean(stds)
 
-        # Apply k-means clustering.
+        # Apply k-means clustering using normalised boxes.
         bboxes = np.array(bboxes)
         kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
         kmeans.fit(bboxes)
