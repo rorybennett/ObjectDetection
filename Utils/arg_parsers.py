@@ -211,7 +211,7 @@ class YOLOv2ArgParser(BaseArgParser):
                                  help='YOLOv2 size loss weight')
         self.parser.add_argument('-olw', '--objectness_loss_weight', type=float, default=0.5,
                                  help='YOLOv2 objectness loss weight')
-        self.parser.add_argument('-colw', '--ccoordinate_loss_weight', type=float, default=10,
+        self.parser.add_argument('-colw', '--coordinate_loss_weight', type=float, default=10,
                                  help='YOLOv2 coordinate loss weight')
 
 
