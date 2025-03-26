@@ -149,7 +149,7 @@ class YOLOv2Loss(Module):
         ########################################################################################################################################################
         # Create a mask that will result in calculations only being done on cells that are supposed to have boxes, otherwise losses skyrocket.
         obj_mask = (targets[:, :, 4, :, :] == 1).float()
-        coord_loss = self.mse_loss(torch.sigmoid(tx) * obj_mask, targets[:, :, 0, :, :]) + self.mse_loss(torch.sigmoid(ty) * obj_mask, targets[:, :, 1, :, :])
+        coord_loss = self.mse_loss(tx * obj_mask, targets[:, :, 0, :, :]) + self.mse_loss(ty * obj_mask, targets[:, :, 1, :, :])
 
         size_loss = self.mse_loss(tw * obj_mask, targets[:, :, 2, :, :]) + self.mse_loss(th * obj_mask, targets[:, :, 3, :, :])
 
