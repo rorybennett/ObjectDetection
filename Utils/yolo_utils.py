@@ -400,7 +400,7 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
         _, ax = plt.subplots(1)
         ax.imshow(image)
         for class_id, (score, (x1, y1, x2, y2)) in top_boxes.items():
-            color = box_colours[class_id] if class_id in box_colours else "red"
+            color = box_colours[class_id]
             rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor=color, facecolor='none')
             ax.add_patch(rect)
             ax.text(x1, y1, f'{class_id}: {score:.1f}', ha='left', color=color, weight='bold', va='bottom')
