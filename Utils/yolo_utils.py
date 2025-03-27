@@ -398,6 +398,7 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
 
         # Draw bounding boxes on the image.
         _, ax = plt.subplots(1)
+        ax.set_facecolor('black')
         ax.imshow(image)
         for class_id, (score, (x1, y1, x2, y2)) in top_boxes.items():
             color = box_colours[class_id]
