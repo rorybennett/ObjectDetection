@@ -60,6 +60,7 @@ coord_weight = args.coordinate_loss_weight  # Weight applied to coordinates.
 size_weight = args.size_loss_weight  # Weight applied to size.
 obj_weight = args.objectness_loss_weight  # Weight applied to objectness.
 class_weight = args.class_loss_weight  # Weight applied to class.
+k_means = args.k_means_clustering  # Number of anchor boxes to generate.
 
 ########################################################################################################################
 # Transformers and datasets used by models.
@@ -67,7 +68,7 @@ class_weight = args.class_loss_weight  # Weight applied to class.
 train_transforms = Transformers.get_yolov1_transforms()
 
 train_mean, train_std, train_anchors = PBD(images_root=train_images_path,
-                                           labels_root=train_labels_path).get_mean_std_and_anchors()
+                                           labels_root=train_labels_path).get_mean_std_and_anchors(k=k_means)
 
 train_dataset = PBD(images_root=train_images_path, labels_root=train_labels_path, transforms=train_transforms,
                     oversampling_factor=oversampling_factor, train_mean=train_mean, train_std=train_std,

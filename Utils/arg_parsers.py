@@ -205,6 +205,8 @@ class YOLOv2ArgParser(BaseArgParser):
         ################################################################################################################
         # Model parameters
         ################################################################################################################
+        self.parser.add_argument('-kmc', '--k_means_clustering', type=int, default=5,
+                                 help='YOLOv2 k-means clustering anchor box count')
         self.parser.add_argument('-clw', '--class_loss_weight', type=float, default=0.5,
                                  help='YOLOv2 class loss weight')
         self.parser.add_argument('-slw', '--size_loss_weight', type=float, default=1,
