@@ -132,8 +132,7 @@ class YOLOv2Loss(Module):
         - targets: (B, num_anchors, 5 + num_classes, H, W)
         - grid_size: Feature map size (e.g., 13 for 416x416 input)
         """
-        B, C, H, W = predictions.shape
-        predictions = predictions.view(B, len(self.anchors), 5 + self.num_classes, H, W)
+        B, _, _, _ = predictions.shape
 
         ########################################################################################################################################################
         # Extract individual components from predictions.
