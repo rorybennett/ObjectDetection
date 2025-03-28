@@ -193,7 +193,7 @@ def plot_yolov2_losses(best_epoch, training_losses, validation_losses, training_
     val_training_combined_losses = [i[0] for i in validation_losses]
     # Epochs start at 0.
     epochs = range(1, len(training_losses) + 1)
-    _, ax = plt.subplots(nrows=2, ncols=5, layout='constrained', figsize=(27, 9), dpi=200)
+    _, ax = plt.subplots(nrows=2, ncols=5, layout='constrained', figsize=(27, 18), dpi=200)
     ####################################################################################################################
     # Training
     ####################################################################################################################
@@ -326,8 +326,7 @@ def plot_yolov1_validation_results(validation_detections, validation_images, S, 
     return
 
 
-def plot_yolov2_validation_results(validation_detections, validation_images, S, anchors, counter, train_mean, train_std,
-                                   save_path):
+def plot_yolov2_validation_results(validation_detections, validation_images, S, anchors, counter, train_mean, train_std, save_path):
     """
     Draw validation images with detected bounding boxes using YOLOv2 model results.
 
@@ -356,23 +355,22 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
         top_boxes = {}
 
         # Extract predictions
-        if predictions.dim() == 3:  # If batch dimension is missing
+        if predictions.dim() == 4:  # If batch dimension is missing
             predictions = predictions.unsqueeze(0)  # Add batch dimension
 
-        B, C, H, W = predictions.shape  # Expected: (B, num_anchors*(5+num_classes), S, S)
-        num_anchors = len(anchors)
-        num_classes = (C // num_anchors) - 5  # Extract class count
+        B, num_anchors, H, W, _ = predictions.shape  # Expected: (B, num_anchors*(5+num_classes), S, S)
+        num_classes = predictions.shape[-1] - 5  # Extract class count
 
-        # Reshape to (num_anchors, (5+num_classes), S, S) → then permute to (num_anchors, S, S, 5+num_classes)
-        predictions = predictions.view(num_anchors, (5 + num_classes), S, S).permute(0, 2, 3, 1)
+        # Reshape predictions for easier manipulation
+        predictions = predictions.reshape(B, num_anchors, 5 + num_classes, S, S).permute(0, 1, 3, 4, 2)
         predictions = predictions.cpu().detach().numpy()  # Convert to NumPy for further processing
 
         for i in range(S):
             for j in range(S):
                 for b, anchor in enumerate(anchors):
-                    # Extract predictions for this anchor.
-                    tx, ty, tw, th, confidence = predictions[b, i, j, :5]
-                    class_probs = predictions[b, i, j, 5:]
+                    # Extract predictions for this anchor (tx, ty, tw, th, confidence, class probabilities)
+                    tx, ty, tw, th, confidence = predictions[0, b, i, j, :5]
+                    class_probs = predictions[0, b, i, j, 5:]
 
                     # Compute final class scores.
                     confidence = torch.sigmoid(torch.tensor(confidence))  # Ensure valid range [0,1]
@@ -382,23 +380,28 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
                     class_score = class_scores[class_id].item()
 
                     # Convert from YOLO format to image coordinates.
-                    bx = (j + torch.sigmoid(torch.tensor(tx))) * cell_size
-                    by = (i + torch.sigmoid(torch.tensor(ty))) * cell_size
-                    bw = (torch.exp(torch.tensor(tw)) * anchor[0]).item() * width
-                    bh = (torch.exp(torch.tensor(th)) * anchor[1]).item() * height
+                    # bx = (j + torch.sigmoid(torch.tensor(tx))) * cell_size
+                    # by = (i + torch.sigmoid(torch.tensor(ty))) * cell_size
+                    # bw = (torch.exp(torch.tensor(tw)) * anchor[0]).item() * width
+                    # bh = (torch.exp(torch.tensor(th)) * anchor[1]).item() * height
 
-                    x1 = int(bx - bw / 2)
-                    y1 = int(by - bh / 2)
-                    x2 = int(bx + bw / 2)
-                    y2 = int(by + bh / 2)
+                    # Remove the sigmoid and exp transforms during plotting
+                    bx = (j + tx) * cell_size  # tx is already sigmoid applied
+                    by = (i + ty) * cell_size  # ty is already sigmoid applied
+                    bw = (torch.exp(torch.tensor(tw)) * anchor[0]).item()
+                    bh = (torch.exp(torch.tensor(th)) * anchor[1]).item()
+
+                    x1 = max(0, min(int(bx - bw / 2), width - 1))
+                    y1 = max(0, min(int(by - bh / 2), height - 1))
+                    x2 = max(0, min(int(bx + bw / 2), width - 1))
+                    y2 = max(0, min(int(by + bh / 2), height - 1))
 
                     # Keep the highest scoring box for each class.
                     if class_id not in top_boxes or class_score > top_boxes[class_id][0]:
                         top_boxes[class_id] = (class_score, (x1, y1, x2, y2))
 
         # Draw bounding boxes on the image.
-        _, ax = plt.subplots(1)
-        ax.set_facecolor('black')
+        fig, ax = plt.subplots(1)
         ax.imshow(image)
         for class_id, (score, (x1, y1, x2, y2)) in top_boxes.items():
             color = box_colours[class_id]
@@ -406,6 +409,7 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
             ax.add_patch(rect)
             ax.text(x1, y1, f'{class_id}: {score:.1f}', ha='left', color=color, weight='bold', va='bottom')
 
+        fig.set_facecolor('black')
         plt.axis('off')
         plt.savefig(join(save_path, f'val_result_{batch_number}.png'), bbox_inches='tight', pad_inches=0)
         plt.close()

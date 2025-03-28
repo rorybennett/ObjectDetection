@@ -132,29 +132,37 @@ class YOLOv2Loss(Module):
         - targets: (B, num_anchors, 5 + num_classes, H, W)
         - grid_size: Feature map size (e.g., 13 for 416x416 input)
         """
-        B, _, _, _ = predictions.shape
+        B, _, _, _, _ = predictions.shape
 
         ########################################################################################################################################################
-        # Extract individual components from predictions.
+        # Extract individual components from predictions and targets.
         ########################################################################################################################################################
-        tx = predictions[:, :, 0, :, :]  # Center x
-        ty = predictions[:, :, 1, :, :]  # Center y
-        tw = predictions[:, :, 2, :, :]  # Width
-        th = predictions[:, :, 3, :, :]  # Height
-        objectness = predictions[:, :, 4, :, :]  # Objectness score
+        tx = predictions[..., 0]  # Center x
+        ty = predictions[..., 1]  # Center y
+        tw = predictions[..., 2]  # Width
+        th = predictions[..., 3]  # Height
+        objectness = predictions[..., 4]  # Objectness score
+        cls = predictions[..., 5:]  # Class probabilities
+
+        tx_target = targets[..., 0]
+        ty_target = targets[..., 1]
+        tw_target = targets[..., 2]
+        th_target = targets[..., 3]
+        obj_target = targets[..., 4]
+        cls_target = targets[..., 5:]
 
         ########################################################################################################################################################
         # Loss calculations.
         ########################################################################################################################################################
         # Create a mask that will result in calculations only being done on cells that are supposed to have boxes, otherwise losses skyrocket.
-        obj_mask = (targets[:, :, 4, :, :] == 1).float()
-        coord_loss = self.mse_loss(tx * obj_mask, targets[:, :, 0, :, :]) + self.mse_loss(ty * obj_mask, targets[:, :, 1, :, :])
+        obj_mask = (targets[:, :, :, :, 4] == 1).float()
+        coord_loss = self.mse_loss(tx * obj_mask, tx_target) + self.mse_loss(ty * obj_mask, ty_target)
 
-        size_loss = self.mse_loss(tw * obj_mask, targets[:, :, 2, :, :]) + self.mse_loss(th * obj_mask, targets[:, :, 3, :, :])
+        size_loss = self.mse_loss(tw * obj_mask, tw_target) + self.mse_loss(th * obj_mask, th_target)
 
-        obj_loss = self.bce_loss(torch.sigmoid(objectness) * obj_mask, targets[:, :, 4, :, :])
+        obj_loss = self.bce_loss(objectness * obj_mask, obj_target)
 
-        class_loss = self.ce_loss(predictions[:, :, 5:, :, :], targets[:, :, 5:, :, :])
+        class_loss = self.ce_loss(cls, cls_target)
 
         # Normalize by batch size.
         coord_loss /= B

@@ -288,7 +288,7 @@ class ProstateBladderDataset(Dataset):
         :return: Target tensor formatted for YOLOv2.
         """
         num_anchors = len(self.anchors)
-        target_tensor = torch.zeros((num_anchors, 5 + self.num_classes, self.S, self.S))
+        target_tensor = torch.zeros((num_anchors, self.S, self.S, 5 + self.num_classes))
 
         # Convert absolute box coords → relative to image size
         img_h, img_w = target["img_size"]
@@ -300,20 +300,18 @@ class ProstateBladderDataset(Dataset):
             xc, yc = (x1 + x2) / 2, (y1 + y2) / 2  # Convert to center coordinates
 
             grid_x, grid_y = int(xc * self.S), int(yc * self.S)  # Find grid cell
-            anchor_idx = torch.argmax(torch.tensor([w * h / (aw * ah) for aw, ah in self.anchors],
-                                                   dtype=torch.float32))
+            anchor_idx = torch.argmax(torch.tensor([w * h / (aw * ah) for aw, ah in self.anchors], dtype=torch.float32))
 
             # Normalize bbox params
             tx, ty = xc * self.S - grid_x, yc * self.S - grid_y
-            tw, th = torch.log(w / self.anchors[anchor_idx][0] + 1e-6), torch.log(
-                h / self.anchors[anchor_idx][1] + 1e-6)
+            tw, th = torch.log(w / self.anchors[anchor_idx][0] + 1e-6), torch.log(h / self.anchors[anchor_idx][1] + 1e-6)
 
             # Populate target tensor
-            target_tensor[anchor_idx, 0, grid_y, grid_x] = tx
-            target_tensor[anchor_idx, 1, grid_y, grid_x] = ty
-            target_tensor[anchor_idx, 2, grid_y, grid_x] = tw
-            target_tensor[anchor_idx, 3, grid_y, grid_x] = th
-            target_tensor[anchor_idx, 4, grid_y, grid_x] = 1  # Objectness score
-            target_tensor[anchor_idx, 5 + label, grid_y, grid_x] = 1  # Class probability
+            target_tensor[anchor_idx, grid_y, grid_x, 0] = tx
+            target_tensor[anchor_idx, grid_y, grid_x, 1] = ty
+            target_tensor[anchor_idx, grid_y, grid_x, 2] = tw
+            target_tensor[anchor_idx, grid_y, grid_x, 3] = th
+            target_tensor[anchor_idx, grid_y, grid_x, 4] = 1  # Objectness score
+            target_tensor[anchor_idx, grid_y, grid_x, 5 + label] = 1  # Class probability
 
         return target_tensor
