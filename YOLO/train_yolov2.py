@@ -89,7 +89,7 @@ val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 ################################################################################################################################################################
 # Set up model, optimiser, learning rate scheduler, and loss criterion.
 ################################################################################################################################################################
-print(f'Loading YOLOv1 model...', end=' ')
+print(f'Loading YOLOv2 model...', end=' ')
 # Loss function
 criterion = YOLOv2Loss(anchors=train_anchors, num_classes=num_classes).to(device)
 # Initialize model
@@ -137,93 +137,93 @@ def main():
         ########################################################################################################################################################
         yolo_model.train()
         epoch_train_loss = [0, 0, 0, 0, 0]
-        # for images, targets in train_loader:
-        #     images = images.to(device)
-        #     targets = targets.to(device)
-        #     # Zero the gradients.
-        #     optimiser.zero_grad()
-        #     # Forward pass
-        #     predictions = yolo_model(images)
-        #     # Calculate loss.
-        #     losses_dict = criterion(predictions, targets)
-        #     # Extract each loss.
-        #     coord_loss = losses_dict['coord_loss']
-        #     size_loss = losses_dict['size_loss']
-        #     obj_loss = losses_dict['obj_loss']
-        #     class_loss = losses_dict['class_loss']
-        #     # Calculate total loss, can apply weights here.
-        #     losses = coord_loss * coord_weight + size_loss * size_weight + obj_loss * obj_weight + class_loss * class_weight
-        #     # Calculate gradients.
-        #     losses.backward()
-        #     # Apply gradient clipping.
-        #     clip_grad_norm_(yolo_model.parameters(), 2)
-        #     optimiser.step()
-        #     # Epoch loss per batch.
-        #     epoch_train_loss[0] += losses.item()
-        #     epoch_train_loss[1] += coord_loss.item()
-        #     epoch_train_loss[2] += size_loss.item()
-        #     epoch_train_loss[3] += obj_loss.item()
-        #     epoch_train_loss[4] += class_loss.item()
-        # # Step schedular once per epoch.
-        # lr_schedular.step()
-        # # Average epoch loss per image for all images.
-        # epoch_train_loss = [loss / len(train_loader) for loss in epoch_train_loss]
-        # training_losses.append(epoch_train_loss)
-        # training_learning_rates.append(lr_schedular.get_last_lr()[0])
-        #
-        # ########################################################################################################################################################
-        # # Validation step within epoch.
-        # ########################################################################################################################################################
-        # yolo_model.eval()
-        # epoch_val_loss = [0, 0, 0, 0, 0]
-        # # No gradient calculations.
-        # with torch.no_grad():
-        #     for images, targets in val_loader:
-        #         images = images.to(device)
-        #         targets = targets.to(device)
-        #         # Forward pass
-        #         predictions = yolo_model(images)
-        #         # Calculate loss.
-        #         losses_dict = criterion(predictions, targets)
-        #         # Extract each loss.
-        #         coord_loss = losses_dict['coord_loss']
-        #         size_loss = losses_dict['size_loss']
-        #         obj_loss = losses_dict['obj_loss']
-        #         class_loss = losses_dict['class_loss']
-        #         # Calculate total loss, can apply weights here.
-        #         losses = coord_loss * coord_weight + size_loss * size_weight + obj_loss * obj_weight + class_loss * class_weight
-        #         # Epoch loss per batch.
-        #         epoch_val_loss[0] += losses.item()
-        #         epoch_val_loss[1] += coord_loss.item()
-        #         epoch_val_loss[2] += size_loss.item()
-        #         epoch_val_loss[3] += obj_loss.item()
-        #         epoch_val_loss[4] += class_loss.item()
-        #
-        #     # Average epoch loss per image for all images.
-        #     epoch_val_loss = [loss / len(val_loader) for loss in epoch_val_loss]
-        #     val_losses.append(epoch_val_loss)
-        #
-        # ########################################################################################################################################################
-        # # Display training and validation losses (combined loss - weighted).
-        # ########################################################################################################################################################
-        # time_now = datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
-        # print(f"\t{time_now}  -  Epoch {epoch + 1}/{total_epochs}, "
-        #       f"Train Loss: {training_losses[-1][0]:0.3f}, Val Loss: {val_losses[-1][0]:0.3f}, "
-        #       f"Learning Rate: {lr_schedular.get_last_lr()[0]:0.3f},", end=' ', flush=True)
-        #
-        # ########################################################################################################################################################
-        # # Check for early stopping. If patience reached, model is saved and final plots are made.
-        # ########################################################################################################################################################
-        # final_epoch_reached = epoch
-        # if final_epoch_reached + 1 > warmup_epochs:
-        #     early_stopping(epoch_val_loss[0], yolo_model, epoch, optimiser, save_dir)
-        #
-        # yolo_utils.plot_yolov2_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates, save_dir)
-        # if early_stopping.early_stop:
-        #     print('Patience reached, stopping early.')
-        #     break
-        # else:
-        #     print()
+        for images, targets in train_loader:
+            images = images.to(device)
+            targets = targets.to(device)
+            # Zero the gradients.
+            optimiser.zero_grad()
+            # Forward pass
+            predictions = yolo_model(images)
+            # Calculate loss.
+            losses_dict = criterion(predictions, targets)
+            # Extract each loss.
+            coord_loss = losses_dict['coord_loss']
+            size_loss = losses_dict['size_loss']
+            obj_loss = losses_dict['obj_loss']
+            class_loss = losses_dict['class_loss']
+            # Calculate total loss, can apply weights here.
+            losses = coord_loss * coord_weight + size_loss * size_weight + obj_loss * obj_weight + class_loss * class_weight
+            # Calculate gradients.
+            losses.backward()
+            # Apply gradient clipping.
+            clip_grad_norm_(yolo_model.parameters(), 2)
+            optimiser.step()
+            # Epoch loss per batch.
+            epoch_train_loss[0] += losses.item()
+            epoch_train_loss[1] += coord_loss.item()
+            epoch_train_loss[2] += size_loss.item()
+            epoch_train_loss[3] += obj_loss.item()
+            epoch_train_loss[4] += class_loss.item()
+        # Step schedular once per epoch.
+        lr_schedular.step()
+        # Average epoch loss per image for all images.
+        epoch_train_loss = [loss / len(train_loader) for loss in epoch_train_loss]
+        training_losses.append(epoch_train_loss)
+        training_learning_rates.append(lr_schedular.get_last_lr()[0])
+
+        ########################################################################################################################################################
+        # Validation step within epoch.
+        ########################################################################################################################################################
+        yolo_model.eval()
+        epoch_val_loss = [0, 0, 0, 0, 0]
+        # No gradient calculations.
+        with torch.no_grad():
+            for images, targets in val_loader:
+                images = images.to(device)
+                targets = targets.to(device)
+                # Forward pass
+                predictions = yolo_model(images)
+                # Calculate loss.
+                losses_dict = criterion(predictions, targets)
+                # Extract each loss.
+                coord_loss = losses_dict['coord_loss']
+                size_loss = losses_dict['size_loss']
+                obj_loss = losses_dict['obj_loss']
+                class_loss = losses_dict['class_loss']
+                # Calculate total loss, can apply weights here.
+                losses = coord_loss * coord_weight + size_loss * size_weight + obj_loss * obj_weight + class_loss * class_weight
+                # Epoch loss per batch.
+                epoch_val_loss[0] += losses.item()
+                epoch_val_loss[1] += coord_loss.item()
+                epoch_val_loss[2] += size_loss.item()
+                epoch_val_loss[3] += obj_loss.item()
+                epoch_val_loss[4] += class_loss.item()
+
+            # Average epoch loss per image for all images.
+            epoch_val_loss = [loss / len(val_loader) for loss in epoch_val_loss]
+            val_losses.append(epoch_val_loss)
+
+        ########################################################################################################################################################
+        # Display training and validation losses (combined loss - weighted).
+        ########################################################################################################################################################
+        time_now = datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
+        print(f"\t{time_now}  -  Epoch {epoch + 1}/{total_epochs}, "
+              f"Train Loss: {training_losses[-1][0]:0.3f}, Val Loss: {val_losses[-1][0]:0.3f}, "
+              f"Learning Rate: {lr_schedular.get_last_lr()[0]:0.3f},", end=' ', flush=True)
+
+        ########################################################################################################################################################
+        # Check for early stopping. If patience reached, model is saved and final plots are made.
+        ########################################################################################################################################################
+        final_epoch_reached = epoch
+        if final_epoch_reached + 1 > warmup_epochs:
+            early_stopping(epoch_val_loss[0], yolo_model, epoch, optimiser, save_dir)
+
+        yolo_utils.plot_yolov2_losses(early_stopping.best_epoch + 1, training_losses, val_losses, training_learning_rates, save_dir)
+        if early_stopping.early_stop:
+            print('Patience reached, stopping early.')
+            break
+        else:
+            print()
 
     ############################################################################################################################################################
     # On training complete, pass through validation images and plot them using best model (must be reloaded).
