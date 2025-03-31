@@ -340,8 +340,8 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
     :param save_path: Directory to save images.
     """
     batch_number = counter
-    device = validation_detections.device  # Ensure compatibility with tensor operations
-    anchors = torch.tensor(anchors, device=device).float()  # Convert to tensor if needed
+    device = validation_detections.device
+    anchors = torch.tensor(anchors, device=device).float()
 
     for index, (predictions, image) in enumerate(zip(validation_detections, validation_images)):
         image = image.cpu().numpy().transpose((1, 2, 0)).copy()
@@ -349,48 +349,40 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
         image = (image * 255).astype(np.uint8)
 
         height, width, _ = image.shape
-        cell_size = width / S  # Each grid cell size
+        # Grid cell size.
+        cell_size = width / S
 
-        # Dictionary to store highest confidence box per class
+        # Dictionary to store highest confidence box per class.
         top_boxes = {}
 
         # Extract predictions
-        if predictions.dim() == 4:  # If batch dimension is missing
-            predictions = predictions.unsqueeze(0)  # Add batch dimension
+        # if predictions.dim() == 4:  # If batch dimension is missing
+        #     predictions = predictions.unsqueeze(0)  # Add batch dimension
 
-        B, num_anchors, H, W, _ = predictions.shape  # Expected: (B, num_anchors*(5+num_classes), S, S)
-        num_classes = predictions.shape[-1] - 5  # Extract class count
-
-        # Reshape predictions for easier manipulation
-        predictions = predictions.reshape(B, num_anchors, 5 + num_classes, S, S).permute(0, 1, 3, 4, 2)
-        predictions = predictions.cpu().detach().numpy()  # Convert to NumPy for further processing
+        B, num_anchors, H, W, _ = predictions.shape
+        predictions = predictions.cpu().detach().numpy()
 
         for i in range(S):
             for j in range(S):
                 for b, anchor in enumerate(anchors):
-                    # Extract predictions for this anchor (tx, ty, tw, th, confidence, class probabilities)
+                    # Extract predictions for this anchor (tx, ty, tw, th, confidence, class probabilities).
                     tx, ty, tw, th, confidence = predictions[0, b, i, j, :5]
                     class_probs = predictions[0, b, i, j, 5:]
 
                     # Compute final class scores.
-                    confidence = torch.sigmoid(torch.tensor(confidence))  # Ensure valid range [0,1]
-                    class_probs = torch.softmax(torch.tensor(class_probs), dim=0)  # Normalize class probabilities
+                    confidence = torch.tensor(confidence)
+                    class_probs = torch.softmax(torch.tensor(class_probs), dim=0)
                     class_scores = confidence * class_probs
                     class_id = torch.argmax(class_scores).item()
                     class_score = class_scores[class_id].item()
 
-                    # Convert from YOLO format to image coordinates.
-                    # bx = (j + torch.sigmoid(torch.tensor(tx))) * cell_size
-                    # by = (i + torch.sigmoid(torch.tensor(ty))) * cell_size
-                    # bw = (torch.exp(torch.tensor(tw)) * anchor[0]).item() * width
-                    # bh = (torch.exp(torch.tensor(th)) * anchor[1]).item() * height
-
-                    # Remove the sigmoid and exp transforms during plotting
+                    # Remove the sigmoid and exp transforms during plotting.
                     bx = (j + tx) * cell_size  # tx is already sigmoid applied
                     by = (i + ty) * cell_size  # ty is already sigmoid applied
-                    bw = (torch.exp(torch.tensor(tw)) * anchor[0]).item()
-                    bh = (torch.exp(torch.tensor(th)) * anchor[1]).item()
+                    bw = (torch.exp(torch.tensor(tw)) * anchor[0]).item() * width
+                    bh = (torch.exp(torch.tensor(th)) * anchor[1]).item() * height
 
+                    # Enforce image size limits.
                     x1 = max(0, min(int(bx - bw / 2), width - 1))
                     y1 = max(0, min(int(by - bh / 2), height - 1))
                     x2 = max(0, min(int(bx + bw / 2), width - 1))
