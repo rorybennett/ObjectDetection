@@ -88,7 +88,7 @@ class YOLOv2(Module):
         x = self.stage1_conv11(x)
         x = self.stage1_conv12(x)
         x = self.stage1_conv13(x)
-
+        # Carried forward.
         residual = x
 
         x_1 = self.stage2_a_maxpl(x)
@@ -110,14 +110,14 @@ class YOLOv2(Module):
         x = self.stage3_conv1(x)
         x = self.stage3_conv2(x)
 
-        # Reshape to (batch_size, num_anchors, grid_size, grid_size, 5 + num_classes)
+        # Reshape to (batch_size, num_anchors, grid_size, grid_size, 5 + num_classes).
         batch_size, _, grid_h, grid_w = x.shape
         num_anchors = len(self.anchors)
         x = x.view(batch_size, num_anchors, 5 + self.num_classes, grid_h, grid_w).permute(0, 1, 3, 4, 2)
 
-        # Sigmoid activation for tx, ty (center offsets) and object confidence
-        x[..., 0:2] = torch.sigmoid(x[..., 0:2])  # tx, ty
-        x[..., 4] = torch.sigmoid(x[..., 4])  # to (objectness score)
-        x[..., 5:] = torch.sigmoid(x[..., 5:])  # Class scores (optional but common)
+        # Sigmoid activation for tx, ty (center offsets) and object confidence.
+        x[..., 0:2] = torch.sigmoid(x[..., 0:2])
+        x[..., 4] = torch.sigmoid(x[..., 4])
+        x[..., 5:] = torch.sigmoid(x[..., 5:])
 
         return x
