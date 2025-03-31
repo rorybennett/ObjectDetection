@@ -247,14 +247,14 @@ class ProstateBladderDataset(Dataset):
             for anchor_idx in range(num_anchors):
                 for i in range(S):  # Iterate over grid rows
                     for j in range(S):  # Iterate over grid cols
-                        conf = torch.sigmoid(boxes[anchor_idx, 4, i, j])  # Object confidence
+                        conf = torch.sigmoid(boxes[anchor_idx, i, j, 4])  # Object confidence
 
                         if conf > 0.5:  # Only draw boxes with confidence > 0.5
                             # Extract (tx, ty, tw, th)
-                            tx = torch.sigmoid(boxes[anchor_idx, 0, i, j])  # Center x offset
-                            ty = torch.sigmoid(boxes[anchor_idx, 1, i, j])  # Center y offset
-                            tw = torch.exp(boxes[anchor_idx, 2, i, j]) * anchors[anchor_idx][0]  # Width
-                            th = torch.exp(boxes[anchor_idx, 3, i, j]) * anchors[anchor_idx][1]  # Height
+                            tx = torch.sigmoid(boxes[anchor_idx, i, j, 0])  # Center x offset
+                            ty = torch.sigmoid(boxes[anchor_idx, i, j, 1])  # Center y offset
+                            tw = torch.exp(boxes[anchor_idx, i, j, 2]) * anchors[anchor_idx][0]  # Width
+                            th = torch.exp(boxes[anchor_idx, i, j, 3]) * anchors[anchor_idx][1]  # Height
 
                             # Convert grid-relative coordinates to absolute image coordinates
                             cell_size = img_size / S
