@@ -356,8 +356,8 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
         top_boxes = {}
 
         # Extract predictions
-        # if predictions.dim() == 4:  # If batch dimension is missing
-        #     predictions = predictions.unsqueeze(0)  # Add batch dimension
+        if predictions.dim() == 4:  # If batch dimension is missing
+            predictions = predictions.unsqueeze(0)  # Add batch dimension
 
         B, num_anchors, H, W, _ = predictions.shape
         predictions = predictions.cpu().detach().numpy()
