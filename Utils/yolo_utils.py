@@ -1,4 +1,5 @@
 from os.path import join
+from pprint import pprint
 
 import cv2
 import numpy as np
@@ -342,6 +343,7 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
     batch_number = counter
     device = validation_detections.device
     anchors = torch.tensor(anchors, device=device).float()
+    num_classes = validation_detections.shape[2] - 5
 
     for index, (predictions, image) in enumerate(zip(validation_detections, validation_images)):
         image = image.cpu().numpy().transpose((1, 2, 0)).copy()
@@ -367,12 +369,13 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
                 for b, anchor in enumerate(anchors):
                     # Extract predictions for this anchor (tx, ty, tw, th, confidence, class probabilities).
                     tx, ty, tw, th, confidence = predictions[0, b, i, j, :5]
-                    class_probs = predictions[0, b, i, j, 5:]
+                    class_probs = predictions[0, b, i, j, 5:num_classes + 5]
 
                     # Compute final class scores.
                     confidence = torch.tensor(confidence)
-                    class_probs = torch.softmax(torch.tensor(class_probs), dim=0)
+                    class_probs = torch.tensor(class_probs)  # Remove softmax
                     class_scores = confidence * class_probs
+                    pprint(class_scores)
                     class_id = torch.argmax(class_scores).item()
                     class_score = class_scores[class_id].item()
 
