@@ -118,6 +118,6 @@ class YOLOv2(Module):
         # Sigmoid activation for tx, ty (center offsets) and object confidence.
         x[..., 0:2] = torch.sigmoid(x[..., 0:2])
         x[..., 4] = torch.sigmoid(x[..., 4])
-        x[..., 5:] = torch.sigmoid(x[..., 5:])
+        x[..., 5:] = torch.softmax(x[..., 5:], dim=-1)
 
         return x

@@ -375,7 +375,6 @@ def plot_yolov2_validation_results(validation_detections, validation_images, S, 
                     confidence = torch.tensor(confidence)
                     class_probs = torch.tensor(class_probs)  # Remove softmax
                     class_scores = confidence * class_probs
-                    pprint(class_scores)
                     class_id = torch.argmax(class_scores).item()
                     class_score = class_scores[class_id].item()
 
