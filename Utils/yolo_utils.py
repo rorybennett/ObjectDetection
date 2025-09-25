@@ -1,5 +1,4 @@
 from os.path import join
-from pprint import pprint
 
 import cv2
 import numpy as np
